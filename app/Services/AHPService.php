@@ -8,6 +8,11 @@ use App\Models\SubmissionComparison;
 
 class AHPService
 {
+    private function round_custom($num, $digits = 10)
+    {
+        return round($num, $digits);
+    }
+
     public function calculateWeights($submissionId = null)
     {
         $criteria = Criteria::where('submission_id', $submissionId)->orderBy('id')->get();
@@ -31,17 +36,17 @@ class AHPService
         $ciValue = $consistencyResult['ci'];
         $lambdaMaxValue = $consistencyResult['lambdaMax'];
 
-        // Define weightedCriteria but DON'T update table if it's a submission
         $weightedCriteria = [];
         foreach ($criteria as $index => $crit) {
             $weight = $weights[$index] ?? 0;
+            $weightRounded2 = round($weight, 2);
             if (! $submissionId) {
-                $crit->update(['weight' => $weight]);
+                $crit->update(['weight' => $weightRounded2]);
             }
             $weightedCriteria[$crit->id] = [
                 'criteria_id' => $crit->id,
                 'name' => $crit->name,
-                'weight' => $weight,
+                'weight' => $weightRounded2,
             ];
         }
 
@@ -51,7 +56,7 @@ class AHPService
         }
 
         return [
-            'weightsIndexed' => $weights,
+            'weightsIndexed' => array_map(fn($w) => round($w, 2), $weights),
             'weights' => $weightedCriteria,
             'cr' => $cr,
             'ri' => $riValue,
@@ -91,7 +96,7 @@ class AHPService
                             ->first();
 
                         if ($reverse && $reverse->value != 0) {
-                            $matrix[$j][$i] = 1.0 / (float) $reverse->value;
+                            $matrix[$j][$i] = $this->round_custom(1.0 / (float) $reverse->value);
                         } else {
                             $matrix[$j][$i] = 1.0;
                         }
@@ -151,14 +156,14 @@ class AHPService
         $columnSums = array_fill(0, $n, 0);
         for ($j = 0; $j < $n; $j++) {
             for ($i = 0; $i < $n; $i++) {
-                $columnSums[$j] += $matrix[$i][$j];
+                $columnSums[$j] = $this->round_custom($columnSums[$j] + $matrix[$i][$j]);
             }
         }
 
         $normalizedMatrix = [];
         for ($i = 0; $i < $n; $i++) {
             for ($j = 0; $j < $n; $j++) {
-                $normalizedMatrix[$i][$j] = $columnSums[$j] != 0 ? $matrix[$i][$j] / $columnSums[$j] : 0;
+                $normalizedMatrix[$i][$j] = $columnSums[$j] != 0 ? $this->round_custom($matrix[$i][$j] / $columnSums[$j]) : 0;
             }
         }
 
@@ -171,15 +176,19 @@ class AHPService
         for ($i = 0; $i < $n; $i++) {
             $product = 1.0;
             for ($j = 0; $j < $n; $j++) {
-                $product *= $matrix[$i][$j];
+                $product = $this->round_custom($product * $matrix[$i][$j]);
             }
-            $weights[$i] = pow($product, 1 / $n);
+            $weights[$i] = $this->round_custom(pow($product, 1 / $n));
         }
 
-        $sum = array_sum($weights);
+        $sum = 0;
+        foreach ($weights as $w) {
+            $sum = $this->round_custom($sum + $w);
+        }
+
         if ($sum > 0) {
             foreach ($weights as $i => $w) {
-                $weights[$i] = $w / $sum;
+                $weights[$i] = $this->round_custom($w / $sum);
             }
         }
 
@@ -192,48 +201,32 @@ class AHPService
             return ['cr' => 0, 'ri' => 0];
         }
 
-        // Calculate Ax
         $ax = [];
         for ($i = 0; $i < $n; $i++) {
             $ax[$i] = 0;
             for ($j = 0; $j < $n; $j++) {
-                $ax[$i] += $matrix[$i][$j] * $weights[$j];
+                $ax[$i] = $this->round_custom($ax[$i] + $this->round_custom($matrix[$i][$j] * $weights[$j]));
             }
         }
 
-        // Calculate lambda max
         $lambdaMax = 0;
         for ($i = 0; $i < $n; $i++) {
             if ($weights[$i] != 0) {
-                $lambdaMax += $ax[$i] / $weights[$i];
+                $lambdaMax = $this->round_custom($lambdaMax + $this->round_custom($ax[$i] / $weights[$i]));
             }
         }
-        $lambdaMax /= $n;
+        $lambdaMax = $this->round_custom($lambdaMax / $n);
 
-        // CI
-        $ci = ($lambdaMax - $n) / ($n - 1);
+        $ci = $this->round_custom(($lambdaMax - $n) / ($n - 1));
 
-        // RI (Random Index) values - Saaty standard for n ≥ 3
         $ri = [
-            1 => 0.00,
-            2 => 0.00,
-            3 => 0.58,
-            4 => 0.90,
-            5 => 1.12,
-            6 => 1.24,
-            7 => 1.32,
-            8 => 1.41,
-            9 => 1.45,
-            10 => 1.49,
+            1 => 0.00, 2 => 0.00, 3 => 0.58, 4 => 0.90, 5 => 1.12,
+            6 => 1.24, 7 => 1.32, 8 => 1.41, 9 => 1.45, 10 => 1.49,
         ];
 
-        // Ambil nilai RI langsung menggunakan $n sebagai key
-        // Jika $n tidak ada di daftar (misal > 10), default ke 1.49
         $riValue = isset($ri[$n]) ? $ri[$n] : 1.49;
 
-        // Hitung CR (Consistency Ratio)
-        // Pastikan tidak ada pembagian dengan nol jika kriteria < 3
-        $cr = ($riValue > 0) ? round($ci / $riValue, 4) : 0;
+        $cr = ($riValue > 0) ? round($this->round_custom($ci / $riValue), 4) : 0;
 
         return ['cr' => $cr, 'ri' => $riValue, 'ci' => round($ci, 4), 'lambdaMax' => round($lambdaMax, 4)];
     }

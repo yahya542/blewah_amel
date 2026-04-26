@@ -85,7 +85,7 @@
                                         @foreach($submission->result_data['weights'] as $w)
                                             <tr>
                                                 <td class="text-start fw-bold">{{ $w['name'] }}</td>
-                                                <td>{{ number_format($w['weight'], 6) }}</td>
+                                                <td>{{ number_format($w['weight'], 2) }}</td>
                                                 <td>{{ number_format($w['weight'] * 100, 2) }}%</td>
                                             </tr>
                                         @endforeach

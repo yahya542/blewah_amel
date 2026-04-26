@@ -124,7 +124,7 @@
                 @foreach($results['criteria'] as $j => $c2)
                 <td>{{ rtrim(rtrim(number_format($results['matrix'][$i][$j], 10), '0'), '.') }}</td>
                 @endforeach
-                <td class="fw-bold bg-light-primary">{{ rtrim(rtrim(number_format($results['weightsIndexed'][$i], 10), '0'), '.') }}</td>
+                <td class="fw-bold bg-light-primary">{{ rtrim(rtrim(number_format($results["weightsIndexed"][$i], 2), '0'), '.') }}</td>
               </tr>
               @endforeach
             </tbody>

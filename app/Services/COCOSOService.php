@@ -9,6 +9,11 @@ use App\Models\SubmissionScore;
 
 class COCOSOService
 {
+    private function round_custom($num, $digits = 10)
+    {
+        return round($num, $digits);
+    }
+
     public function calculateRanking($weights, $criteria = null, $submissionId = null)
     {
         if ($criteria === null) {
@@ -49,10 +54,10 @@ class COCOSOService
                 }
 
                 // Si = Σ (w_j * r_ij)
-                $siSum += $val * $weight;
+                $siSum = $this->round_custom($siSum + $this->round_custom($val * $weight));
 
                 // Pi = Π (r_ij ^ w_j)
-                $piProduct *= pow(($val == 0 ? 0.0001 : $val), $weight);
+                $piProduct = $this->round_custom($piProduct * pow(($val == 0 ? 0.0001 : $val), $weight));
             }
             $si[$i] = $siSum;
             $pi[$i] = $piProduct;
@@ -62,27 +67,35 @@ class COCOSOService
         $maxSi = max($si);
         $minPi = min($pi);
         $maxPi = max($pi);
-        $sumSi = array_sum($si);
-        $sumPi = array_sum($pi);
+        $sumSi = 0;
+        foreach ($si as $s) {
+            $sumSi = $this->round_custom($sumSi + $s);
+        }
+        $sumPi = 0;
+        foreach ($pi as $p) {
+            $sumPi = $this->round_custom($sumPi + $p);
+        }
 
         $results = [];
         foreach ($alternatives as $i => $alt) {
             // K_a: (Si-minSi)/(maxSi-minSi) + (Pi-minPi)/(maxPi-minPi)
-            $siNorm = ($maxSi != $minSi) ? ($si[$i] - $minSi) / ($maxSi - $minSi) : 1;
-            $piNorm = ($maxPi != $minPi) ? ($pi[$i] - $minPi) / ($maxPi - $minPi) : 1;
-            $ka = $siNorm + $piNorm;
+            $siNorm = ($maxSi != $minSi) ? $this->round_custom(($si[$i] - $minSi) / ($maxSi - $minSi)) : 1;
+            $piNorm = ($maxPi != $minPi) ? $this->round_custom(($pi[$i] - $minPi) / ($maxPi - $minPi)) : 1;
+            $ka = $this->round_custom($siNorm + $piNorm);
 
-            // K_b: (Si/minSi) + (Pi/minPi)
-            //$kb = ($minSi > 0 ? $si[$i] / $minSi : 0) + ($minPi > 0 ? $pi[$i] / $minPi : 0);
             // K_b: Relatif terhadap nilai minimum gabungan (Rumus Standar CoCoSo)
-$kb = ($minSi + $minPi != 0) ? ($si[$i] + $pi[$i]) / ($minSi + $minPi) : 0;
+            $kb = ($minSi + $minPi != 0) ? $this->round_custom(($si[$i] + $pi[$i]) / ($minSi + $minPi)) : 0;
 
             // K_c: Si/ΣSi + Pi/ΣPi
-            $kc = ($sumSi > 0 ? $si[$i] / $sumSi : 0) + ($sumPi > 0 ? $pi[$i] / $sumPi : 0);
+            $kc = $this->round_custom(
+                ($sumSi > 0 ? $this->round_custom($si[$i] / $sumSi) : 0) +
+                ($sumPi > 0 ? $this->round_custom($pi[$i] / $sumPi) : 0)
+            );
 
             // Qi = (ka * kb * kc)^(1/3) + (ka + kb + kc) / 3
-            $product = max($ka * $kb * $kc, 0.0001);
-            $qi = pow($product, 1 / 3) + ($ka + $kb + $kc) / 3;
+            $product = max($this->round_custom($ka * $kb * $kc), 0.0001);
+            $qi = $this->round_custom(pow($product, 1 / 3)) + $this->round_custom(($ka + $kb + $kc) / 3);
+            $qi = $this->round_custom($qi, 4);
 
             $results[] = [
                 'alternative' => $alt,
@@ -151,14 +164,14 @@ $kb = ($minSi + $minPi != 0) ? ($si[$i] + $pi[$i]) / ($minSi + $minPi) : 0;
                 $val = $matrix[$i][$j];
                 $max = $colMax[$j];
                 $min = $colMin[$j];
-                $diff = $max - $min;
+                $diff = $this->round_custom($max - $min);
 
                 if ($diff == 0) {
                     $normalized[$i][$j] = 1;
                 } elseif ($criteria[$j]->type === 'benefit') {
-                    $normalized[$i][$j] = ($val - $min) / $diff;
+                    $normalized[$i][$j] = $this->round_custom(($val - $min) / $diff);
                 } else {
-                    $normalized[$i][$j] = ($max - $val) / $diff;
+                    $normalized[$i][$j] = $this->round_custom(($max - $val) / $diff);
                 }
             }
         }
