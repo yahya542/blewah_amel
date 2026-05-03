@@ -8,70 +8,65 @@ use App\Models\SubmissionComparison;
 
 class AHPService
 {
-    // Tetap gunakan 10 digit untuk akurasi perhitungan internal
     private function round_custom($num, $digits = 10)
     {
         return round($num, $digits);
     }
 
     public function calculateWeights($submissionId = null)
-{
-    $criteria = Criteria::where('submission_id', $submissionId)->orderBy('id')->get();
-    $n = $criteria->count();
-    if ($n === 0) { return []; }
-
-    // 1. Hitung dengan angka teliti (jangan dibulatkan dulu agar CI tidak negatif)
-    if ($submissionId) {
-        $matrix = $this->getPairwiseMatrixFromSubmission($submissionId, $criteria);
-    } else {
-        $matrix = $this->getPairwiseMatrix($criteria);
-    }
-
-    $normalizedMatrix = $this->normalizeMatrix($matrix, $n);
-    $weights = $this->calculateEigenvector($matrix, $n);
-    $consistencyResult = $this->calculateConsistencyRatio($matrix, $weights, $n);
-
-    // 2. Kumpulkan bobot kriteria (bulatkan ke 2 desimal di sini)
-    $weightedCriteria = [];
-    foreach ($criteria as $index => $crit) {
-        $weight = $weights[$index] ?? 0;
-        $weightRounded2 = round($weight, 2);
-        if (! $submissionId) {
-            $crit->update(['weight' => $weightRounded2]);
+    {
+        $criteria = Criteria::where('submission_id', $submissionId)->orderBy('id')->get();
+        $n = $criteria->count();
+        if ($n === 0) {
+            return [];
         }
-        $weightedCriteria[$crit->id] = [
-            'criteria_id' => $crit->id,
-            'name' => $crit->name,
-            'weight' => $weightRounded2,
+
+        if ($submissionId) {
+            $matrix = $this->getPairwiseMatrixFromSubmission($submissionId, $criteria);
+        } else {
+            $matrix = $this->getPairwiseMatrix($criteria);
+        }
+
+        $normalizedMatrix = $this->normalizeMatrix($matrix, $n);
+        $weights = $this->calculateEigenvector($matrix, $n);
+
+        $consistencyResult = $this->calculateConsistencyRatio($matrix, $weights, $n);
+        $cr = $consistencyResult['cr'];
+        $riValue = $consistencyResult['ri'];
+        $ciValue = $consistencyResult['ci'];
+        $lambdaMaxValue = $consistencyResult['lambdaMax'];
+
+        $weightedCriteria = [];
+        foreach ($criteria as $index => $crit) {
+            $weight = $weights[$index] ?? 0;
+            $weightRounded2 = round($weight, 2);
+            if (! $submissionId) {
+                $crit->update(['weight' => $weightRounded2]);
+            }
+            $weightedCriteria[$crit->id] = [
+                'criteria_id' => $crit->id,
+                'name' => $crit->name,
+                'weight' => $weightRounded2,
+            ];
+        }
+
+        $criteriaArray = [];
+        foreach ($criteria as $index => $crit) {
+            $criteriaArray[$index] = $crit;
+        }
+
+        return [
+            'weightsIndexed' => array_map(fn($w) => round($w, 2), $weights),
+            'weights' => $weightedCriteria,
+            'cr' => $cr,
+            'ri' => $riValue,
+            'ci' => $ciValue,
+            'lambdaMax' => $lambdaMaxValue,
+            'matrix' => $matrix,
+            'normalizedMatrix' => $normalizedMatrix,
+            'criteria' => $criteriaArray,
         ];
     }
-
-    // 3. Bulatkan Matriks HANYA untuk tampilan tabel hijau
-    $displayMatrix = [];
-    foreach ($matrix as $i => $row) {
-        foreach ($row as $j => $val) {
-            $displayMatrix[$i][$j] = round($val, 2);
-        }
-    }
-
-    // 4. Return hasil: Hitungan asli tetap akurat, tapi yang dikirim ke View sudah bulat
-    return [
-        'weightsIndexed' => array_map(fn($w) => round($w, 2), $weights),
-        'weights' => $weightedCriteria,
-        'cr' => round($consistencyResult['cr'], 2),
-        'ri' => $consistencyResult['ri'],
-        'ci' => round($consistencyResult['ci'], 2),
-        'lambdaMax' => round($consistencyResult['lambdaMax'], 2),
-        'matrix' => $displayMatrix, // Matriks ini yang akan tampil di tabel hijau (Sudah 2 digit!)
-        'normalizedMatrix' => $normalizedMatrix,
-        'criteria' => $criteria->values()->all(),
-    ];
-}
-
-    
-    // ... (Gunakan fungsi getPairwiseMatrix, normalizeMatrix, calculateEigenvector, calculateConsistencyRatio yang asli/awal tadi)
-
-
 
     private function getPairwiseMatrixFromSubmission($submissionId, $criteria)
     {
@@ -93,7 +88,7 @@ class AHPService
                         ->first();
 
                     if ($comparison) {
-                        $matrix[$j][$i] = $this->round_custom((float) $comparison->value);
+                        $matrix[$j][$i] = (float) $comparison->value;
                     } else {
                         $reverse = SubmissionComparison::where('submission_id', $submissionId)
                             ->where('criteria_id_1', $id2)
@@ -122,7 +117,7 @@ class AHPService
             $weights[$crit->id] = [
                 'criteria_id' => $crit->id,
                 'name' => $crit->name,
-                'weight' => $this->round_custom((float) $crit->weight),
+                'weight' => (float) $crit->weight,
                 'type' => $crit->type,
             ];
         }
@@ -148,7 +143,7 @@ class AHPService
                         ->where('criteria_id_2', $id2)
                         ->first();
 
-                    $matrix[$j][$i] = $comparison ? $this->round_custom((float) $comparison->value) : 1.0;
+                    $matrix[$j][$i] = $comparison ? (float) $comparison->value : 1.0;
                 }
             }
         }
@@ -203,7 +198,7 @@ class AHPService
     private function calculateConsistencyRatio($matrix, $weights, $n)
     {
         if ($n <= 2) {
-            return ['cr' => 0, 'ri' => 0, 'ci' => 0, 'lambdaMax' => 0];
+            return ['cr' => 0, 'ri' => 0];
         }
 
         $ax = [];
@@ -231,13 +226,8 @@ class AHPService
 
         $riValue = isset($ri[$n]) ? $ri[$n] : 1.49;
 
-        $cr = ($riValue > 0) ? $this->round_custom($ci / $riValue) : 0;
+        $cr = ($riValue > 0) ? round($this->round_custom($ci / $riValue), 4) : 0;
 
-        return [
-            'cr' => $cr, 
-            'ri' => $riValue, 
-            'ci' => $ci, 
-            'lambdaMax' => $lambdaMax
-        ];
+        return ['cr' => $cr, 'ri' => $riValue, 'ci' => round($ci, 4), 'lambdaMax' => round($lambdaMax, 4)];
     }
 }

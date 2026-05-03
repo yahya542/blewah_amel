@@ -78,38 +78,33 @@ class COCOSOService
 
         $results = [];
         foreach ($alternatives as $i => $alt) {
-            // 1. Ka (Sesuai perhitungan di Excel kamu: (Si+Pi)/(MaxSi+MaxPi) + 0.5)
-            // Ini yang menghasilkan A1 = 1.31 dan A3 = 1.50
-            $ka = (($si[$i] + $pi[$i]) / ($maxSi + $maxPi)) + 0.5;
+            // K_a: (Si-minSi)/(maxSi-minSi) + (Pi-minPi)/(maxPi-minPi)
+            $siNorm = ($maxSi != $minSi) ? $this->round_custom(($si[$i] - $minSi) / ($maxSi - $minSi)) : 1;
+            $piNorm = ($maxPi != $minPi) ? $this->round_custom(($pi[$i] - $minPi) / ($maxPi - $minPi)) : 1;
+            $ka = $this->round_custom($siNorm + $piNorm);
 
-            // 2. Kb (Sesuai perhitungan di Excel kamu: (Si/MinSi) + (Pi/MinPi))
-            // Ini yang menghasilkan A1 = 2.96 dan A3 = 3.66
-            $kb = ($minSi != 0 && $minPi != 0) ? ($si[$i] / $minSi) + ($pi[$i] / $minPi) : 0;
+            // K_b: Relatif terhadap nilai minimum gabungan (Rumus Standar CoCoSo)
+            $kb = ($minSi + $minPi != 0) ? $this->round_custom(($si[$i] + $pi[$i]) / ($minSi + $minPi)) : 0;
 
-            // 3. Kc (Sesuai perhitungan di Excel kamu: (0.5*Si + 0.5*Pi) / (0.5*MaxSi + 0.5*MaxPi))
-            // Ini yang menghasilkan A1 = 0.81 dan A3 = 1.00
-            $lambda = 0.5;
-            $kc = (($lambda * $si[$i]) + ((1 - $lambda) * $pi[$i])) / (($lambda * $maxSi) + ((1 - $lambda) * $maxPi));
+            // K_c: Si/ΣSi + Pi/ΣPi
+            $kc = $this->round_custom(
+                ($sumSi > 0 ? $this->round_custom($si[$i] / $sumSi) : 0) +
+                ($sumPi > 0 ? $this->round_custom($pi[$i] / $sumPi) : 0)
+            );
 
-            // 4. Qi (RUMUS YANG KAMU KETIK DARI EXCEL)
-            // K = (PRODUCT(Ka,Kb,Kc)^(1/3) + (1/3) * SUM(Ka,Kb,Kc))
-            $product = $ka * $kb * $kc;
-            $sumK = $ka + $kb + $kc;
-
-            $qi_raw = pow($product, 1 / 3) + ((1 / 3) * $sumK);
-
-            // PEMBULATAN 2 ANGKA DI BELAKANG KOMA (Hasil Akhir Saja)
-            $qi = round($qi_raw, 2);
+            // Qi = (ka * kb * kc)^(1/3) + (ka + kb + kc) / 3
+            $product = max($this->round_custom($ka * $kb * $kc), 0.0001);
+            $qi = $this->round_custom(pow($product, 1 / 3)) + $this->round_custom(($ka + $kb + $kc) / 3);
+            $qi = $this->round_custom($qi, 4);
 
             $results[] = [
                 'alternative' => $alt,
-                'name' => $alt->name,
-                'si' => round($si[$i], 4),
-                'pi' => round($pi[$i], 4),
-                'ka' => round($ka, 2),
-                'kb' => round($kb, 2),
-                'kc' => round($kc, 2),
-                'qi' => $qi, // Ini yang tampil: 3.16, 3.82, dll
+                'si' => $si[$i],
+                'pi' => $pi[$i],
+                'ka' => $ka,
+                'kb' => $kb,
+                'kc' => $kc,
+                'qi' => $qi,
             ];
         }
 
@@ -158,26 +153,25 @@ class COCOSOService
         $m = count($matrix);
         $n = count($criteria);
 
-        // Ambil Nilai Max dan Min per Kriteria
         for ($j = 0; $j < $n; $j++) {
             $col = array_column($matrix, $j);
             $colMax[$j] = max($col);
             $colMin[$j] = min($col);
         }
 
-        // Proses Normalisasi Sesuai Rumus Excel
-        for ($i = 0; $i < $m; $i++) { // Tambahkan loop baris ini
+        for ($i = 0; $i < $m; $i++) {
             for ($j = 0; $j < $n; $j++) {
                 $val = $matrix[$i][$j];
                 $max = $colMax[$j];
                 $min = $colMin[$j];
+                $diff = $this->round_custom($max - $min);
 
-                if ($criteria[$j]->type === 'benefit') {
-                    // rij = x_ij / max(x_j)
-                    $normalized[$i][$j] = ($max != 0) ? $this->round_custom($val / $max) : 0;
+                if ($diff == 0) {
+                    $normalized[$i][$j] = 1;
+                } elseif ($criteria[$j]->type === 'benefit') {
+                    $normalized[$i][$j] = $this->round_custom(($val - $min) / $diff);
                 } else {
-                    // rij = min(x_j) / x_ij
-                    $normalized[$i][$j] = ($val != 0) ? $this->round_custom($min / $val) : 0;
+                    $normalized[$i][$j] = $this->round_custom(($max - $val) / $diff);
                 }
             }
         }

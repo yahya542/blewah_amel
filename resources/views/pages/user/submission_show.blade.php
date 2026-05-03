@@ -85,8 +85,8 @@
                                         @foreach($submission->result_data['weights'] as $w)
                                             <tr>
                                                 <td class="text-start fw-bold">{{ $w['name'] }}</td>
-                                                 <td>{{ number_format((float) $w['weight'], 2) }}</td>
-                                                <td>{{ number_format((float) $w['weight'] * 100, 2) }}%</td>
+                                                <td>{{ number_format($w['weight'], 2) }}</td>
+                                                <td>{{ number_format($w['weight'] * 100, 2) }}%</td>
                                             </tr>
                                         @endforeach
                                     </tbody>
@@ -169,12 +169,12 @@
                                                 </span>
                                             </td>
                                             <td class="text-start fw-bold text-dark">{{ $res['name'] }}</td>
-                                             <td>{{ isset($res['si']) ? number_format($res['si'], 4) : '-' }}</td>
-                                             <td>{{ isset($res['pi']) ? number_format($res['pi'], 4) : '-' }}</td>
-                                             <td>{{ isset($res['ka']) ? number_format($res['ka'], 4) : '-' }}</td>
-                                             <td>{{ isset($res['kb']) ? number_format($res['kb'], 4) : '-' }}</td>
-                                             <td>{{ isset($res['kc']) ? number_format($res['kc'], 4) : '-' }}</td>
-                                             <td class="fw-bold text-success">{{ number_format($res['qi'], 2) }}</td>
+                                            <td>{{ isset($res['si']) ? number_format($res['si'], 4) : '-' }}</td>
+                                            <td>{{ isset($res['pi']) ? number_format($res['pi'], 4) : '-' }}</td>
+                                            <td>{{ isset($res['ka']) ? number_format($res['ka'], 4) : '-' }}</td>
+                                            <td>{{ isset($res['kb']) ? number_format($res['kb'], 4) : '-' }}</td>
+                                            <td>{{ isset($res['kc']) ? number_format($res['kc'], 4) : '-' }}</td>
+                                            <td class="fw-bold text-success">{{ number_format($res['qi'], 4) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

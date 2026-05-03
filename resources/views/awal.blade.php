@@ -106,7 +106,7 @@
             <td style="font-weight: 600;">
                 {{ $res['name'] ?? 'Varietas Tanpa Nama' }}
             </td>
-
+#
             <td style="text-align: center;">
                 <span class="score-box">
                     {{ number_format($res['qi'] ?? 0, 4) }}
