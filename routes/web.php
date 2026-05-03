@@ -11,26 +11,12 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserSubmissionController;
 
-Route::get('/', function () {
-    // Ambil pengajuan terakhir yang sudah selesai diproses (processed)
-    // Laravel akan otomatis mengambil data ranking dari kolom result_data
-    $latestSubmission = \App\Models\Submission::where('status', 'processed')
-        ->latest()
-        ->first();
-
-    // Siapkan variable results
-    $results = null;
-
-    if ($latestSubmission && isset($latestSubmission->result_data['ranking'])) {
-        // Ambil data ranking dari json database
-        $results = $latestSubmission->result_data['ranking'];
-    }
-
+Route::get('/', function (\App\Http\Controllers\COCOSOController $cocosoController) {
     if (auth()->check()) {
         return auth()->user()->isAdmin() ? redirect()->route('admin.dashboard') : redirect()->route('user.dashboard');
     }
 
-    return view('awal', compact('results', 'latestSubmission'));
+    return $cocosoController->ranking();
 });
 
 

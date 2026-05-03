@@ -118,6 +118,10 @@ class COCOSOController extends Controller
         $criteria = Criteria::whereNull('submission_id')->orderBy('id')->get();
         $results = $this->cocosoService->calculateRanking($ahpResults['weights'], $criteria);
 
-        return view('pages.ranking.index', compact('results'));
+        if (auth()->check()) {
+            return view('pages.ranking.index', compact('results'));
+        }
+
+        return view('awal', compact('results'));
     }
 }

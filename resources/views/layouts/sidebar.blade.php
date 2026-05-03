@@ -58,12 +58,7 @@
           <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
           <span class="hide-menu">PENGAJUAN</span>
         </li>
-        <li class="sidebar-item">
-          <a class="sidebar-link {{ Request::is('submissions*') ? 'active' : '' }}" href="{{ route('admin.submissions.index') }}" aria-expanded="false">
-            <span><i class="ti ti-files"></i></span>
-            <span class="hide-menu">Pengajuan User</span>
-          </a>
-        </li>
+     
         <li class="nav-small-cap">
           <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
           <span class="hide-menu">HASIL</span>

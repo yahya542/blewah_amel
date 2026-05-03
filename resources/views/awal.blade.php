@@ -75,7 +75,7 @@
     <div class="container">
         <div style="margin-bottom: 30px; text-align: center;">
             <h2 style="font-size: 32px; color: #1a202c;">Hasil Seleksi <span>Varietas Terbaik</span></h2>
-            <p style="color: #718096;">Berdasarkan perhitungan metode COCOSO terbaru</p>
+            <p style="color: #718096;">Hanya menampilkan hasil ranking yang disimpan manual oleh admin.</p>
         </div>
 
         @if(isset($results) && count($results) > 0)
@@ -84,13 +84,21 @@
                     <h2>🏆 Tabel Rekomendasi Bibit Unggul</h2>
                 </div>
                 <div class="table-responsive">
+                    @if(!empty($manualText))
+                        <div style="padding: 20px; background: #f0fdf4; border-radius: 12px; margin-bottom: 20px; border: 1px solid #d1fae5; color: #065f46;">
+                            <strong>Catatan Admin:</strong>
+                            <p style="margin: 10px 0 0;">{{ $manualText }}</p>
+                        </div>
+                    @endif
                     <table>
                         <thead>
                             <tr>
-                                <th width="10%">Rank</th>
+                                <th width="8%">Rank</th>
                                 <th>Nama Alternatif</th>
-                                <th style="text-align: center;">Skor Qi</th>
-                                <th style="text-align: center;">Status</th>
+                                <th width="12%" style="text-align: center;">Si</th>
+                                <th width="12%" style="text-align: center;">Pi</th>
+                                <th width="16%" style="text-align: center;">Skor Akhir (Qi)</th>
+                                <th width="20%" style="text-align: center;">Status Rekomendasi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -98,28 +106,30 @@
         <tr class="{{ $index == 0 ? 'top-row' : '' }}">
             <td>
                 <span class="rank-number" style="{{ $index == 0 ? 'background: #f97316; color: white;' : '' }}">
-                    #{{ $index + 1 }}
+                    @if($index == 0)
+                        🏆
+                    @else
+                        #{{ $index + 1 }}
+                    @endif
                 </span>
             </td>
-            
-            {{-- PERBAIKAN DI SINI: Gunakan $res['name'] bukan $res['alternative'] --}}
             <td style="font-weight: 600;">
-                {{ $res['name'] ?? 'Varietas Tanpa Nama' }}
+                {{ $res['name'] ?? ($res['alternative']->name ?? 'Varietas Tanpa Nama') }}
             </td>
-
+            <td style="text-align: center;">{{ number_format($res['si'] ?? 0, 4) }}</td>
+            <td style="text-align: center;">{{ number_format($res['pi'] ?? 0, 4) }}</td>
             <td style="text-align: center;">
                 <span class="score-box">
                     {{ number_format($res['qi'] ?? 0, 4) }}
                 </span>
             </td>
-            
             <td style="text-align: center;">
                 @if($index == 0)
                     <span style="background: #16a34a; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap;">Sangat Direkomendasikan</span>
                 @elseif($index < 3)
                     <span style="background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Direkomendasikan</span>
                 @else
-                    <span style="background: #94a3b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Alternatif</span>
+                    <span style="background: #94a3b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Alternatif Pendukung</span>
                 @endif
             </td>
         </tr>
