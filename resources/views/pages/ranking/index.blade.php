@@ -32,19 +32,16 @@
                     <span class="fs-5 fw-bold">{{ $index + 1 }}</span>
                   @endif
                 </td>
-                <td class="fw-bold text-start ps-4">{{ $res['alternative']->name }}</td>
-                <td>{{ number_format($res['si'], 4) }}</td>
-                <td>{{ number_format($res['pi'], 4) }}</td>
-                <td class="fs-5 fw-bold text-primary">{{ number_format($res['qi'], 4) }}</td>
-                <td>
-                  @if($index == 0)
-                    <span class="badge bg-success px-3 py-2">Sangat Direkomendasikan</span>
-                  @elseif($index < 3)
-                    <span class="badge bg-primary px-3 py-2">Direkomendasikan</span>
-                  @else
-                    <span class="badge bg-secondary px-3 py-2">Alternatif Pendukung</span>
-                  @endif
-                </td>
+                <td style="font-weight: 600; text-align: left; padding-left: 20px;">
+    @if(is_object($res['alternative']))
+        {{ $res['alternative']->name }}
+    @elseif(is_array($res['alternative']))
+        {{ $res['alternative']['name'] ?? 'Varietas Tanpa Nama' }}
+    @else
+        Varietas Tanpa Nama
+    @endif
+</td>
+
               </tr>
               @endforeach
             </tbody>

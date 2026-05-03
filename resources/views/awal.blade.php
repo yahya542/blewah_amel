@@ -85,46 +85,58 @@
                 </div>
                 <div class="table-responsive">
                     <table>
-                        <thead>
-                            <tr>
-                                <th width="10%">Rank</th>
-                                <th>Nama Alternatif</th>
-                                <th style="text-align: center;">Skor Qi</th>
-                                <th style="text-align: center;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+             <thead>
+    <tr>
+        <th width="10%">Rank</th>
+        <th>Nama Alternatif</th>
+        <th style="text-align: center;">Si</th>
+        <th style="text-align: center;">Pi</th>
+        <th style="text-align: center;">Skor Qi</th>
+        <th style="text-align: center;">Status</th>
+    </tr>
+</thead>
+
+                            <tbody>
     @foreach($results as $index => $res)
         <tr class="{{ $index == 0 ? 'top-row' : '' }}">
             <td>
                 <span class="rank-number" style="{{ $index == 0 ? 'background: #f97316; color: white;' : '' }}">
-                    #{{ $index + 1 }}
+                    {{ $index == 0 ? '🏆' : '#' . ($index + 1) }}
                 </span>
             </td>
             
-            {{-- PERBAIKAN DI SINI: Gunakan $res['name'] bukan $res['alternative'] --}}
-            <td style="font-weight: 600;">
-                {{ $res['name'] ?? 'Varietas Tanpa Nama' }}
+            {{-- Sesuaikan dengan data Admin: $res['alternative']->name --}}
+            <td style="font-weight: 600; text-align: left; padding-left: 20px;">
+                {{ $res['alternative']->name ?? 'Varietas Tanpa Nama' }}
+            </td>
+
+            {{-- Tambahkan Si dan Pi jika ingin lengkap seperti Admin --}}
+            <td style="text-align: center; color: #718096; font-size: 13px;">
+                {{ number_format($res['si'] ?? 0, 4) }}
+            </td>
+            <td style="text-align: center; color: #718096; font-size: 13px;">
+                {{ number_format($res['pi'] ?? 0, 4) }}
             </td>
 
             <td style="text-align: center;">
-                <span class="score-box">
+                <span class="score-box" style="font-size: 16px;">
                     {{ number_format($res['qi'] ?? 0, 4) }}
                 </span>
             </td>
             
             <td style="text-align: center;">
                 @if($index == 0)
-                    <span style="background: #16a34a; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap;">Sangat Direkomendasikan</span>
+                    <span style="background: #16a34a; color: white; padding: 6px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; white-space: nowrap;">Sangat Direkomendasikan</span>
                 @elseif($index < 3)
-                    <span style="background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Direkomendasikan</span>
+                    <span style="background: #3b82f6; color: white; padding: 6px 15px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Direkomendasikan</span>
                 @else
-                    <span style="background: #94a3b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Alternatif</span>
+                    <span style="background: #94a3b8; color: white; padding: 6px 15px; border-radius: 20px; font-size: 11px; white-space: nowrap;">Alternatif Pendukung</span>
                 @endif
             </td>
         </tr>
     @endforeach
 </tbody>
+
 
                     </table>
                 </div>
