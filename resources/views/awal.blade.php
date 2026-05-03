@@ -95,8 +95,7 @@
                             <tr>
                                 <th width="8%">Rank</th>
                                 <th>Nama Alternatif</th>
-                                <th width="12%" style="text-align: center;">Si</th>
-                                <th width="12%" style="text-align: center;">Pi</th>
+                                
                                 <th width="16%" style="text-align: center;">Skor Akhir (Qi)</th>
                                 <th width="20%" style="text-align: center;">Status Rekomendasi</th>
                             </tr>
@@ -116,8 +115,7 @@
             <td style="font-weight: 600;">
                 {{ $res['name'] ?? ($res['alternative']->name ?? 'Varietas Tanpa Nama') }}
             </td>
-            <td style="text-align: center;">{{ number_format($res['si'] ?? 0, 4) }}</td>
-            <td style="text-align: center;">{{ number_format($res['pi'] ?? 0, 4) }}</td>
+         
             <td style="text-align: center;">
                 <span class="score-box">
                     {{ number_format($res['qi'] ?? 0, 4) }}
