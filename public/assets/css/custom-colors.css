@@ -1,0 +1,58 @@
+/* Custom Color Variables untuk SPK Blewah */
+/* File ini akan di-import setelah Bootstrap CSS */
+
+:root {
+    /* PRIMARY COLORS */
+    --color-primary: #f53003;
+    --color-primary-dark: #FF4433;
+    --color-primary-light: #F61500;
+    --color-primary-orange: #FF750F;
+
+    /* NEUTRAL COLORS */
+    --color-bg-light: #FDFDFC;
+    --color-bg-dark: #0a0a0a;
+    --color-text-primary: #1b1b18;
+    --color-text-dark: #EDEDEC;
+    --color-text-muted: #706f6c;
+    --color-text-muted-dark: #A1A09A;
+    --color-text-dark-secondary: #1C1C1A;
+
+    /* BORDER COLORS */
+    --color-border-light: #e3e3e0;
+    --color-border-dark: #3E3E3A;
+    --color-border-hover-dark: #62605b;
+    --color-border-body: #19140035;
+    --color-border-hover: #1915014a;
+
+    /* BACKGROUND VARIANTS */
+    --color-bg-card-light: #ffffff;
+    --color-bg-card-dark: #161615;
+    --color-bg-soft-red: #fff2f2;
+    --color-bg-soft-red-dark: #1D0002;
+    --color-bg-page: #f4f6f9;
+    --color-bg-footer-light: #e6fffa;
+    --color-bg-light-success: #d4edda;
+    --color-bg-light-primary: #ECF2FF;
+
+    /* GREEN THEME */
+    --color-green-primary: #11998e;
+    --color-green-secondary: #38ef7d;
+    --color-green-dark: #0fb294;
+    --color-green-light: #13DEB9;
+    --color-green-mint: #20c997;
+
+    /* ACCENT COLORS */
+    --color-accent-pink: #F3BEC7;
+    --color-accent-pink-dark: #4B0600;
+    --color-accent-yellow: #F8B803;
+    --color-accent-yellow-dark: #391800;
+    --color-accent-brown: #733000;
+
+    /* SMALL ELEMENTS */
+    --color-dot-gray: #dbdbd7;
+    --color-white: #ffffff;
+    --color-black: #000000;
+
+    /* SHADOW */
+    --color-shadow-inset-dark: #fffaed2d;
+}

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminSubmissionController;
+use App\Models\Submission;
 use App\Http\Controllers\AHPController;
 use App\Http\Controllers\AlternativeController;
 use App\Http\Controllers\AuthController;
@@ -11,12 +12,27 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserSubmissionController;
 
 Route::get('/', function () {
+    // Ambil pengajuan terakhir yang sudah selesai diproses (processed)
+    // Laravel akan otomatis mengambil data ranking dari kolom result_data
+    $latestSubmission = \App\Models\Submission::where('status', 'processed')
+        ->latest()
+        ->first();
+
+    // Siapkan variable results
+    $results = null;
+
+    if ($latestSubmission && isset($latestSubmission->result_data['ranking'])) {
+        // Ambil data ranking dari json database
+        $results = $latestSubmission->result_data['ranking'];
+    }
+
     if (auth()->check()) {
         return auth()->user()->isAdmin() ? redirect()->route('admin.dashboard') : redirect()->route('user.dashboard');
     }
 
-    return redirect()->route('login');
+    return view('awal', compact('results', 'latestSubmission'));
 });
+
 
 // Auth Routes
 Route::middleware('guest')->group(function () {
