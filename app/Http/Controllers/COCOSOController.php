@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 class COCOSOController extends Controller
 {
     protected $cocosoService;
-
     protected $ahpService;
 
     public function __construct(COCOSOService $cocosoService, AHPService $ahpService)
@@ -99,6 +98,9 @@ class COCOSOController extends Controller
         return redirect()->route('admin.cocoso.index')->with('success', 'Perhitungan CoCoSo berhasil diperbarui');
     }
 
+    /**
+     * MENYELAMATKAN METHOD RANKING YANG TERHAPUS
+     */
     public function ranking()
     {
         $ahpResults = $this->ahpService->calculateWeights();

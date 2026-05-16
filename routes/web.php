@@ -51,6 +51,7 @@ Route::middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
     Route::prefix('ahp')->name('ahp.')->group(function () {
         Route::get('/', [AHPController::class, 'index'])->name('index');
         Route::post('/calculate', [AHPController::class, 'calculate'])->name('calculate');
+        Route::post('/combined-calculate', [AHPController::class, 'combinedCalculate'])->name('combined-calculate');
     });
 
     Route::prefix('cocoso')->name('cocoso.')->group(function () {
