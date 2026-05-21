@@ -1,0 +1,90 @@
+--- app/Services/AHPService.php
++++ app/Services/AHPService.php
+@@ -28,8 +28,15 @@
+     }
+ 
+     $normalizedMatrix = $this->normalizeMatrix($matrix, $n);
+-    $weights = $this->calculateEigenvector($matrix, $n);
++    
++    $vektor = [];
++    for ($i = 0; $i < $n; $i++) {
++        $sumVector = 0;
++        foreach ($normalizedMatrix[$i] as $val) $sumVector += $val;
++        $vektor[$i] = $sumVector;
++    }
++    $weights = $this->calculateEigenvector($normalizedMatrix, $n);
+     $consistencyResult = $this->calculateConsistencyRatio($matrix, $weights, $n);
+ 
+     // 2. Kumpulkan bobot kriteria (bulatkan ke 2 desimal di sini)
+@@ -62,6 +69,8 @@
+         'cr' => round($consistencyResult['cr'], 2),
+         'ri' => $consistencyResult['ri'],
+         'ci' => round($consistencyResult['ci'], 2),
+         'lambdaMax' => round($consistencyResult['lambdaMax'], 2),
++        'eigenValues' => $consistencyResult['eigenValues'],
++        'vektor' => $vektor,
+         'matrix' => $displayMatrix, // Matriks ini yang akan tampil di tabel hijau (Sudah 2 digit!)
+         'normalizedMatrix' => $normalizedMatrix,
+@@ -176,12 +185,12 @@
+         return $normalizedMatrix;
+     }
+ 
+-    private function calculateEigenvector($matrix, $n)
++    private function calculateEigenvector($normalizedMatrix, $n)
+     {
+         $weights = [];
+         for ($i = 0; $i < $n; $i++) {
+-            $product = 1.0;
++            $sum = 0;
+             for ($j = 0; $j < $n; $j++) {
+-                $product = $this->round_custom($product * $matrix[$i][$j]);
++                $sum = $this->round_custom($sum + $normalizedMatrix[$i][$j]);
+             }
+-            $weights[$i] = $this->round_custom(pow($product, 1 / $n));
++            $weights[$i] = $this->round_custom($sum / $n);
+         }
+ 
+         $sum = 0;
+@@ -206,21 +215,19 @@
+             return ['cr' => 0, 'ri' => 0, 'ci' => 0, 'lambdaMax' => 0];
+         }
+ 
+-        $ax = [];
++        $columnSums = array_fill(0, $n, 0);
++        for ($j = 0; $j < $n; $j++) {
++            for ($i = 0; $i < $n; $i++) {
++                $columnSums[$j] = $this->round_custom($columnSums[$j] + $matrix[$i][$j]);
++            }
++        }
++
++        $eigenValues = [];
++        $lambdaMax = 0;
+         for ($i = 0; $i < $n; $i++) {
+-            $ax[$i] = 0;
+-            for ($j = 0; $j < $n; $j++) {
+-                $ax[$i] = $this->round_custom($ax[$i] + $this->round_custom($matrix[$i][$j] * $weights[$j]));
+-            }
++            $ev = $this->round_custom($columnSums[$i] * $weights[$i]);
++            $eigenValues[$i] = $ev;
++            $lambdaMax = $this->round_custom($lambdaMax + $ev);
+         }
+-
+-        $lambdaMax = 0;
+-        for ($i = 0; $i < $n; $i++) {
+-            if ($weights[$i] != 0) {
+-                $lambdaMax = $this->round_custom($lambdaMax + $this->round_custom($ax[$i] / $weights[$i]));
+-            }
+-        }
+-        $lambdaMax = $this->round_custom($lambdaMax / $n);
+ 
+         $ci = $this->round_custom(($lambdaMax - $n) / ($n - 1));
+@@ -236,7 +243,8 @@
+             'cr' => $cr, 
+             'ri' => $riValue, 
+             'ci' => $ci, 
+-            'lambdaMax' => $lambdaMax
++            'lambdaMax' => $lambdaMax,
++            'eigenValues' => $eigenValues
+         ];
+     }
+ }

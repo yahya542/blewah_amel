@@ -34,9 +34,24 @@ class COCOSOService
 
         $normalizedMatrix = $this->normalizeMatrix($decisionMatrix, $criteria);
 
-        // Si (Weighted Sum) and Pi (Weighted Product)
         $si = [];
         $pi = [];
+
+        // Ekstraksi bobot kriteria terlebih dahulu
+        $extractedWeights = [];
+        foreach ($criteria as $j => $crit) {
+            $weight = 0;
+            foreach ($weights as $wKey => $wVal) {
+                if (is_object($wVal) && isset($wVal->id) && $wVal->id == $crit->id) { $weight = (float)($wVal->weight ?? 0); break; }
+                elseif (is_array($wVal) && isset($wVal['id']) && $wVal['id'] == $crit->id) { $weight = (float)($wVal['weight'] ?? 0); break; }
+            }
+            if ($weight == 0) {
+                if (isset($weights[$crit->id])) { $weight = (float)(is_array($weights[$crit->id]) ? ($weights[$crit->id]['weight'] ?? 0) : $weights[$crit->id]); }
+                elseif (isset($weights[$j])) { $weight = (float)(is_array($weights[$j]) ? ($weights[$j]['weight'] ?? $weights[$j] ?? 0) : $weights[$j]); }
+            }
+            if ($weight > 1) { $weight = $weight / 100; }
+            $extractedWeights[$j] = $weight;
+        }
 
         foreach ($alternatives as $i => $alt) {
             $siSum = 0;
@@ -44,20 +59,11 @@ class COCOSOService
 
             foreach ($criteria as $j => $crit) {
                 $val = $normalizedMatrix[$i][$j];
+                $weight = $extractedWeights[$j];
 
-                // Get weight
-                $weight = 0;
-                if (isset($weights[$crit->id]) && isset($weights[$crit->id]['weight'])) {
-                    $weight = (float) $weights[$crit->id]['weight'];
-                } elseif (is_array($weights) && isset($weights[$j])) {
-                    $weight = (float) ($weights[$j]['weight'] ?? $weights[$j] ?? 0);
-                }
-
-                // Si = Σ (w_j * r_ij)
                 $siSum = $this->round_custom($siSum + $this->round_custom($val * $weight));
-
-                // Pi = Π (r_ij ^ w_j)
-                $piProduct = $this->round_custom($piProduct * pow(($val == 0 ? 0.0001 : $val), $weight));
+                $safeVal = $val <= 0 ? 0.0001 : $val;
+                $piProduct = $this->round_custom($piProduct * pow($safeVal, $weight));
             }
             $si[$i] = $siSum;
             $pi[$i] = $piProduct;
@@ -67,49 +73,50 @@ class COCOSOService
         $maxSi = max($si);
         $minPi = min($pi);
         $maxPi = max($pi);
-        $sumSi = 0;
-        foreach ($si as $s) {
-            $sumSi = $this->round_custom($sumSi + $s);
-        }
-        $sumPi = 0;
-        foreach ($pi as $p) {
-            $sumPi = $this->round_custom($sumPi + $p);
-        }
+
+        // Hitung sum untuk kc sesuai rumus di rumus/alur.md
+        $sumSi = array_sum($si);
+        $sumPi = array_sum($pi);
 
         $results = [];
         foreach ($alternatives as $i => $alt) {
-            // 1. Ka (Sesuai perhitungan di Excel kamu: (Si+Pi)/(MaxSi+MaxPi) + 0.5)
-            // Ini yang menghasilkan A1 = 1.31 dan A3 = 1.50
-            $ka = (($si[$i] + $pi[$i]) / ($maxSi + $maxPi)) + 0.5;
+            // === RUMUS EXACT SESUAI rumus/alur.md (yang user bandingkan dengan Excel) ===
+            // k_a = (Si-min)/(max-min) + (Pi-min)/(max-min)
+            $ka = 0;
+            if ($maxSi != $minSi) {
+                $ka += ($si[$i] - $minSi) / ($maxSi - $minSi);
+            }
+            if ($maxPi != $minPi) {
+                $ka += ($pi[$i] - $minPi) / ($maxPi - $minPi);
+            }
 
-            // 2. Kb (Sesuai perhitungan di Excel kamu: (Si/MinSi) + (Pi/MinPi))
-            // Ini yang menghasilkan A1 = 2.96 dan A3 = 3.66
-            $kb = ($minSi != 0 && $minPi != 0) ? ($si[$i] / $minSi) + ($pi[$i] / $minPi) : 0;
+            // k_b = Si / min(Si) + Pi / min(Pi)
+            $kb = 0;
+            if ($minSi != 0) $kb += $si[$i] / $minSi;
+            if ($minPi != 0) $kb += $pi[$i] / $minPi;
 
-            // 3. Kc (Sesuai perhitungan di Excel kamu: (0.5*Si + 0.5*Pi) / (0.5*MaxSi + 0.5*MaxPi))
-            // Ini yang menghasilkan A1 = 0.81 dan A3 = 1.00
-            $lambda = 0.5;
-            $kc = (($lambda * $si[$i]) + ((1 - $lambda) * $pi[$i])) / (($lambda * $maxSi) + ((1 - $lambda) * $maxPi));
+            // k_c = Si/ΣSi + Pi/ΣPi
+            $kc = 0;
+            if ($sumSi != 0) $kc += $si[$i] / $sumSi;
+            if ($sumPi != 0) $kc += $pi[$i] / $sumPi;
 
-            // 4. Qi (RUMUS YANG KAMU KETIK DARI EXCEL)
-            // K = (PRODUCT(Ka,Kb,Kc)^(1/3) + (1/3) * SUM(Ka,Kb,Kc))
             $product = $ka * $kb * $kc;
             $sumK = $ka + $kb + $kc;
-
-            $qi_raw = pow($product, 1 / 3) + ((1 / 3) * $sumK);
-
-            // PEMBULATAN 2 ANGKA DI BELAKANG KOMA (Hasil Akhir Saja)
-            $qi = round($qi_raw, 2);
+            $qi_raw = pow($product, 1 / 3) + ($sumK / 3);
 
             $results[] = [
                 'alternative' => $alt,
                 'name' => $alt->name,
-                'si' => round($si[$i], 4),
-                'pi' => round($pi[$i], 4),
-                'ka' => round($ka, 2),
-                'kb' => round($kb, 2),
-                'kc' => round($kc, 2),
-                'qi' => $qi, // Ini yang tampil: 3.16, 3.82, dll
+                'si' => $si[$i],
+                'pi' => $pi[$i],
+                'ka' => $ka,
+                'kb' => $kb,
+                'kc' => $kc,
+                'qi' => round($qi_raw, 3),
+                // Sertakan data pelacak agar bisa dibaca di Blade View secara rapi
+                'debug_raw_scores' => $decisionMatrix[$i] ?? [],
+                'debug_weight' => $extractedWeights,
+                'debug_normalized' => $normalizedMatrix[$i] ?? []
             ];
         }
 
@@ -130,7 +137,6 @@ class COCOSOService
                 $matrix[$i][$j] = $score ? (float) $score->value : 0;
             }
         }
-
         return $matrix;
     }
 
@@ -145,7 +151,6 @@ class COCOSOService
                 $matrix[$i][$j] = $score ? (float) $score->value : 0;
             }
         }
-
         return $matrix;
     }
 
@@ -158,26 +163,28 @@ class COCOSOService
         $m = count($matrix);
         $n = count($criteria);
 
-        // Ambil Nilai Max dan Min per Kriteria
         for ($j = 0; $j < $n; $j++) {
             $col = array_column($matrix, $j);
             $colMax[$j] = max($col);
             $colMin[$j] = min($col);
         }
 
-        // Proses Normalisasi Sesuai Rumus Excel
-        for ($i = 0; $i < $m; $i++) { // Tambahkan loop baris ini
+        for ($i = 0; $i < $m; $i++) {
             for ($j = 0; $j < $n; $j++) {
                 $val = $matrix[$i][$j];
                 $max = $colMax[$j];
                 $min = $colMin[$j];
+                $range = $max - $min;
+
+                if ($range == 0) {
+                    $normalized[$i][$j] = 1.0;
+                    continue;
+                }
 
                 if ($criteria[$j]->type === 'benefit') {
-                    // rij = x_ij / max(x_j)
-                    $normalized[$i][$j] = ($max != 0) ? $this->round_custom($val / $max) : 0;
+                    $normalized[$i][$j] = $this->round_custom(($val - $min) / $range);
                 } else {
-                    // rij = min(x_j) / x_ij
-                    $normalized[$i][$j] = ($val != 0) ? $this->round_custom($min / $val) : 0;
+                    $normalized[$i][$j] = $this->round_custom(($max - $val) / $range);
                 }
             }
         }
