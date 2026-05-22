@@ -131,7 +131,7 @@
         <!-- ========================================================================= -->
         <!-- 🔍 PANEL PELACAK DATA MENTAH DARI CSV & BOBOT JALUR INTEGRASI            -->
         <!-- ========================================================================= -->
-        <div class="card border border-warning bg-light-warning mb-5 shadow-none">
+       <!--  <div class="card border border-warning bg-light-warning mb-5 shadow-none">
           <div class="card-body p-4">
             <h6 class="fw-bold text-warning-dark mb-2">
               <i class="ti ti-search me-1"></i> Panel Pelacak Validasi Data Mentah (Hasil Ekstraksi CSV)
@@ -180,7 +180,7 @@
               </table>
             </div>
           </div>
-        </div>
+        </div> -->
         <!-- ========================================================================= -->
 
         <div class="d-flex align-items-center mb-3">
