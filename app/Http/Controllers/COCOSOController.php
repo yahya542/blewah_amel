@@ -32,6 +32,7 @@ class COCOSOController extends Controller
         $scores = Score::whereHas('alternative', function($q) {
             $q->whereNull('submission_id');
         })->get();
+        
         foreach ($scores as $score) {
             $savedScores[$score->alternative_id][$score->criteria_id] = $score->value;
         }
@@ -40,48 +41,18 @@ class COCOSOController extends Controller
             $q->whereNull('submission_id');
         })->exists()) {
             
-            // Mengambil bobot kriteria hasil simpanan proses AHP
-            $weights = $this->ahpService->getWeightsFromCriteria(null);
+            // Hitung bobot lewat AHPService secara langsung untuk validasi CR
+            $ahpResults = $this->ahpService->calculateWeights();
 
-            // --- PERBAIKAN: Deteksi bobot kriteria yang super aman untuk segala format ---
-            $hasWeights = false;
-            if (!empty($weights)) {
-                foreach ($weights as $wKey => $wVal) {
-                    if (is_object($wVal) && isset($wVal->weight) && $wVal->weight > 0) {
-                        $hasWeights = true;
-                        break;
-                    } elseif (is_array($wVal) && isset($wVal['weight']) && $wVal['weight'] > 0) {
-                        $hasWeights = true;
-                        break;
-                    } elseif (is_numeric($wVal) && $wVal > 0) { // Jika flat array [ID => Bobot]
-                        $hasWeights = true;
-                        break;
-                    }
-                }
-            }
-
-            if (empty($weights)) {
-                $error = 'Belum ada data kriteria. Silakan input kriteria terlebih dahulu.';
-            } elseif (! $hasWeights) {
-                // Jika bobot belum dihitung, jalankan kalkulasi AHP otomatis
-                $ahpResults = $this->ahpService->calculateWeights();
-
-                if (empty($ahpResults) || ! isset($ahpResults['weights'])) {
-                    $error = 'Perbandingan AHP belum lengkap. Silakan lakukan perbandingan berpasangan di halaman AHP.';
-                } elseif ($ahpResults['cr'] >= 0.1) {
-                    $error = 'Consistency Ratio (CR) = '.number_format($ahpResults['cr'], 4).' (>= 0.1). Perbandingan AHP tidak konsisten. Silakan perbaiki perbandingan.';
-                } else {
-                    $weights = $this->ahpService->getWeightsFromCriteria(null);
-                    $results = $this->cocosoService->calculateRanking($weights, $criteria);
-                }
+            if (empty($ahpResults) || ! isset($ahpResults['weights'])) {
+                $error = 'Perbandingan AHP belum lengkap. Silakan lakukan perbandingan berpasangan di halaman AHP.';
+            } elseif (isset($ahpResults['cr']) && $ahpResults['cr'] >= 0.1) {
+                $error = 'Consistency Ratio (CR) = '.number_format($ahpResults['cr'], 4).' (>= 0.1). Perbandingan AHP tidak konsisten. Silakan perbaiki perbandingan.';
             } else {
-                // Periksa konsistensi matriks AHP sebelum memproses peringkat CoCoSo
-                $ahpResults = $this->ahpService->calculateWeights();
-                if (isset($ahpResults['cr']) && $ahpResults['cr'] >= 0.1) {
-                    $error = 'Consistency Ratio (CR) = '.number_format($ahpResults['cr'], 4).' (>= 0.1). Perbandingan AHP tidak konsisten. Silakan perbaiki perbandingan.';
-                } else {
-                    $results = $this->cocosoService->calculateRanking($weights, $criteria);
-                }
+                // --- PERBAIKAN UTAMA ---
+                // Kirim $ahpResults['weights'] bukan dari getWeightsFromCriteria agar formatnya 
+                // sama persis dengan yang dipakai di method ranking() dan sesuai ekspektasi service.
+                $results = $this->cocosoService->calculateRanking($ahpResults['weights'], $criteria);
             }
         }
 

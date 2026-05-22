@@ -9,11 +9,6 @@ use App\Models\SubmissionScore;
 
 class COCOSOService
 {
-    private function round_custom($num, $digits = 10)
-    {
-        return round($num, $digits);
-    }
-
     public function calculateRanking($weights, $criteria = null, $submissionId = null)
     {
         if ($criteria === null) {
@@ -37,7 +32,7 @@ class COCOSOService
         $si = [];
         $pi = [];
 
-        // Ekstraksi bobot kriteria terlebih dahulu
+        // Ekstraksi bobot kriteria
         $extractedWeights = [];
         foreach ($criteria as $j => $crit) {
             $weight = 0;
@@ -61,9 +56,9 @@ class COCOSOService
                 $val = $normalizedMatrix[$i][$j];
                 $weight = $extractedWeights[$j];
 
-                $siSum = $this->round_custom($siSum + $this->round_custom($val * $weight));
-                $safeVal = $val <= 0 ? 0.0001 : $val;
-                $piProduct = $this->round_custom($piProduct * pow($safeVal, $weight));
+                $siSum += ($val * $weight);
+                $safeVal = $val <= 0 ? 1.0 : $val; 
+                $piProduct *= pow($safeVal, $weight);
             }
             $si[$i] = $siSum;
             $pi[$i] = $piProduct;
@@ -74,52 +69,42 @@ class COCOSOService
         $minPi = min($pi);
         $maxPi = max($pi);
 
-        // Hitung sum untuk kc sesuai rumus di rumus/alur.md
-        $sumSi = array_sum($si);
-        $sumPi = array_sum($pi);
+        $sumSiPi = 0;
+        foreach ($si as $idx => $s) {
+            $sumSiPi += $s + $pi[$idx];
+        }
 
         $results = [];
+
         foreach ($alternatives as $i => $alt) {
-            // === RUMUS EXACT SESUAI rumus/alur.md (yang user bandingkan dengan Excel) ===
-            // k_a = (Si-min)/(max-min) + (Pi-min)/(max-min)
-            $ka = 0;
-            if ($maxSi != $minSi) {
-                $ka += ($si[$i] - $minSi) / ($maxSi - $minSi);
-            }
-            if ($maxPi != $minPi) {
-                $ka += ($pi[$i] - $minPi) / ($maxPi - $minPi);
-            }
+            // Standar CoCoSo (Yazdani et al. 2019)
+            // k_a = (S_i + P_i) / Σ(S_i + P_i)
+            // k_b = S_i/min(S) + P_i/min(P)
+            // k_c = 0.5*(S_i/max(S)) + 0.5*(P_i/max(P))
+            $kia = $sumSiPi > 0 ? ($si[$i] + $pi[$i]) / $sumSiPi : 0;
+            $kib = ($minSi != 0 ? $si[$i] / $minSi : 0) + ($minPi != 0 ? $pi[$i] / $minPi : 0);
+            $kic = 0.5 * ($maxSi != 0 ? $si[$i] / $maxSi : 0) + 0.5 * ($maxPi != 0 ? $pi[$i] / $maxPi : 0);
 
-            // k_b = Si / min(Si) + Pi / min(Pi)
-            $kb = 0;
-            if ($minSi != 0) $kb += $si[$i] / $minSi;
-            if ($minPi != 0) $kb += $pi[$i] / $minPi;
-
-            // k_c = Si/ΣSi + Pi/ΣPi
-            $kc = 0;
-            if ($sumSi != 0) $kc += $si[$i] / $sumSi;
-            if ($sumPi != 0) $kc += $pi[$i] / $sumPi;
-
-            $product = $ka * $kb * $kc;
-            $sumK = $ka + $kb + $kc;
-            $qi_raw = pow($product, 1 / 3) + ($sumK / 3);
+            $sumK = $kia + $kib + $kic;
+            $prodK = $kia * $kib * $kic;
+            $qi_raw = ($sumK / 3) + pow($prodK, 1 / 3);
 
             $results[] = [
                 'alternative' => $alt,
                 'name' => $alt->name,
-                'si' => $si[$i],
-                'pi' => $pi[$i],
-                'ka' => $ka,
-                'kb' => $kb,
-                'kc' => $kc,
+                'si' => round($si[$i], 2),
+                'pi' => round($pi[$i], 2),
+                'ka' => $kia,
+                'kb' => $kib,
+                'kc' => $kic,
                 'qi' => round($qi_raw, 3),
-                // Sertakan data pelacak agar bisa dibaca di Blade View secara rapi
                 'debug_raw_scores' => $decisionMatrix[$i] ?? [],
                 'debug_weight' => $extractedWeights,
                 'debug_normalized' => $normalizedMatrix[$i] ?? []
             ];
         }
 
+        // Urutkan dari nilai preferensi tertinggi ke terendah
         usort($results, fn ($a, $b) => $b['qi'] <=> $a['qi']);
 
         return $results;
@@ -182,9 +167,9 @@ class COCOSOService
                 }
 
                 if ($criteria[$j]->type === 'benefit') {
-                    $normalized[$i][$j] = $this->round_custom(($val - $min) / $range);
+                    $normalized[$i][$j] = ($val - $min) / $range;
                 } else {
-                    $normalized[$i][$j] = $this->round_custom(($max - $val) / $range);
+                    $normalized[$i][$j] = ($max - $val) / $range;
                 }
             }
         }
