@@ -1,0 +1,818 @@
+[
+    {
+        "id": 72,
+        "alternative_id": 66,
+        "criteria_id": 81,
+        "value": 5,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-04-26T03:51:10.000000Z"
+    },
+    {
+        "id": 73,
+        "alternative_id": 66,
+        "criteria_id": 82,
+        "value": 5,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 74,
+        "alternative_id": 66,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 75,
+        "alternative_id": 66,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 76,
+        "alternative_id": 66,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 77,
+        "alternative_id": 66,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 78,
+        "alternative_id": 67,
+        "criteria_id": 81,
+        "value": 3,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 79,
+        "alternative_id": 67,
+        "criteria_id": 82,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 80,
+        "alternative_id": 67,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 81,
+        "alternative_id": 67,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 82,
+        "alternative_id": 67,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 83,
+        "alternative_id": 67,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 84,
+        "alternative_id": 68,
+        "criteria_id": 81,
+        "value": 4,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 85,
+        "alternative_id": 68,
+        "criteria_id": 82,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 86,
+        "alternative_id": 68,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 87,
+        "alternative_id": 68,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 88,
+        "alternative_id": 68,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 89,
+        "alternative_id": 68,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 90,
+        "alternative_id": 69,
+        "criteria_id": 81,
+        "value": 5,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 91,
+        "alternative_id": 69,
+        "criteria_id": 82,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 92,
+        "alternative_id": 69,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 93,
+        "alternative_id": 69,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 94,
+        "alternative_id": 69,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 95,
+        "alternative_id": 69,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 96,
+        "alternative_id": 70,
+        "criteria_id": 81,
+        "value": 4,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 97,
+        "alternative_id": 70,
+        "criteria_id": 82,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 98,
+        "alternative_id": 70,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 99,
+        "alternative_id": 70,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 100,
+        "alternative_id": 70,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 101,
+        "alternative_id": 70,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-04-26T03:51:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 102,
+        "alternative_id": 19,
+        "criteria_id": 81,
+        "value": 5,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 103,
+        "alternative_id": 20,
+        "criteria_id": 81,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 104,
+        "alternative_id": 33,
+        "criteria_id": 81,
+        "value": 5,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 105,
+        "alternative_id": 34,
+        "criteria_id": 81,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 106,
+        "alternative_id": 46,
+        "criteria_id": 81,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 107,
+        "alternative_id": 47,
+        "criteria_id": 81,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 108,
+        "alternative_id": 48,
+        "criteria_id": 81,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 109,
+        "alternative_id": 51,
+        "criteria_id": 81,
+        "value": 5,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 110,
+        "alternative_id": 52,
+        "criteria_id": 81,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 111,
+        "alternative_id": 53,
+        "criteria_id": 81,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 112,
+        "alternative_id": 54,
+        "criteria_id": 81,
+        "value": 5,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 113,
+        "alternative_id": 55,
+        "criteria_id": 81,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 114,
+        "alternative_id": 19,
+        "criteria_id": 82,
+        "value": 5,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 115,
+        "alternative_id": 20,
+        "criteria_id": 82,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 116,
+        "alternative_id": 33,
+        "criteria_id": 82,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 117,
+        "alternative_id": 34,
+        "criteria_id": 82,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 118,
+        "alternative_id": 46,
+        "criteria_id": 82,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 119,
+        "alternative_id": 47,
+        "criteria_id": 82,
+        "value": 5,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 120,
+        "alternative_id": 48,
+        "criteria_id": 82,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 121,
+        "alternative_id": 51,
+        "criteria_id": 82,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 122,
+        "alternative_id": 52,
+        "criteria_id": 82,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 123,
+        "alternative_id": 53,
+        "criteria_id": 82,
+        "value": 4,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 124,
+        "alternative_id": 54,
+        "criteria_id": 82,
+        "value": 2,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 125,
+        "alternative_id": 55,
+        "criteria_id": 82,
+        "value": 3,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 126,
+        "alternative_id": 19,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 127,
+        "alternative_id": 20,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 128,
+        "alternative_id": 33,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 129,
+        "alternative_id": 34,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 130,
+        "alternative_id": 46,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 131,
+        "alternative_id": 47,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 132,
+        "alternative_id": 48,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 133,
+        "alternative_id": 51,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 134,
+        "alternative_id": 52,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 135,
+        "alternative_id": 53,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 136,
+        "alternative_id": 54,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 137,
+        "alternative_id": 55,
+        "criteria_id": 83,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 138,
+        "alternative_id": 19,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 139,
+        "alternative_id": 20,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 140,
+        "alternative_id": 33,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 141,
+        "alternative_id": 34,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 142,
+        "alternative_id": 46,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 143,
+        "alternative_id": 47,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 144,
+        "alternative_id": 48,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 145,
+        "alternative_id": 51,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 146,
+        "alternative_id": 52,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 147,
+        "alternative_id": 53,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 148,
+        "alternative_id": 54,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 149,
+        "alternative_id": 55,
+        "criteria_id": 84,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 150,
+        "alternative_id": 19,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 151,
+        "alternative_id": 20,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 152,
+        "alternative_id": 33,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 153,
+        "alternative_id": 34,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 154,
+        "alternative_id": 46,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 155,
+        "alternative_id": 47,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 156,
+        "alternative_id": 48,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 157,
+        "alternative_id": 51,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 158,
+        "alternative_id": 52,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 159,
+        "alternative_id": 53,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 160,
+        "alternative_id": 54,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 161,
+        "alternative_id": 55,
+        "criteria_id": 85,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 162,
+        "alternative_id": 19,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 163,
+        "alternative_id": 20,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 164,
+        "alternative_id": 33,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 165,
+        "alternative_id": 34,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 166,
+        "alternative_id": 46,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 167,
+        "alternative_id": 47,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 168,
+        "alternative_id": 48,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 169,
+        "alternative_id": 51,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 170,
+        "alternative_id": 52,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 171,
+        "alternative_id": 53,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 172,
+        "alternative_id": 54,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    },
+    {
+        "id": 173,
+        "alternative_id": 55,
+        "criteria_id": 86,
+        "value": 0,
+        "created_at": "2026-05-16T08:00:10.000000Z",
+        "updated_at": "2026-05-16T08:00:10.000000Z"
+    }
+]

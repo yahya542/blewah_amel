@@ -26,9 +26,9 @@
 │  3. Hitung Pi = ∏ (r_ij)^w_j     ← Weighted Product      │
 │                                                         │
 │  4. Hitung:                                               │
-│      k_a = (Si-min)/(max-min) + (Pi-min)/(max-min)       │
+│      k_a = (Si + Pi) / Σ(Si + Pi)                          │
 │      k_b = Si / min(Si)                                   │
-│      k_c = Si/ΣSi + Pi/ΣPi                                │
+│      k_c = 0.5·(Si/maxSi) + 0.5·(Pi/maxPi)               │
 │                                                         │
 │  5. Qi = (k_a × k_b × k_c)^(1/3) + (k_a+k_b+k_c)/3      │
 │       ↑ Skor akhir (semakin tinggi = semakin baik)       │

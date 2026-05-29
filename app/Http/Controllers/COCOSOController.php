@@ -28,10 +28,11 @@ class COCOSOController extends Controller
         $error = null;
         $savedScores = [];
 
-        // Load saved scores for display (only global scores)
+        // Load saved scores untuk ditampilkan di halaman input
         $scores = Score::whereHas('alternative', function($q) {
             $q->whereNull('submission_id');
         })->get();
+        
         foreach ($scores as $score) {
             $savedScores[$score->alternative_id][$score->criteria_id] = $score->value;
         }
@@ -39,41 +40,19 @@ class COCOSOController extends Controller
         if (Score::whereHas('alternative', function($q) {
             $q->whereNull('submission_id');
         })->exists()) {
-            // Get weights directly from criteria table (where AHP saved them)
-            $weights = $this->ahpService->getWeightsFromCriteria(null);
+            
+            // Hitung bobot lewat AHPService secara langsung untuk validasi CR
+            $ahpResults = $this->ahpService->calculateWeights();
 
-            // Check if any weights are null or zero (not calculated yet)
-            $hasWeights = false;
-            foreach ($weights as $w) {
-                if (isset($w['weight']) && $w['weight'] > 0) {
-                    $hasWeights = true;
-                    break;
-                }
-            }
-
-            if (empty($weights)) {
-                $error = 'Belum ada data kriteria. Silakan input kriteria terlebih dahulu.';
-            } elseif (! $hasWeights) {
-                // Weights not calculated yet - run AHP calculation
-                $ahpResults = $this->ahpService->calculateWeights();
-
-                if (empty($ahpResults) || ! isset($ahpResults['weights'])) {
-                    $error = 'Perbandingan AHP belum lengkap. Silakan lakukan perbandingan berpasangan di halaman AHP.';
-                } elseif ($ahpResults['cr'] >= 0.1) {
-                    $error = 'Consistency Ratio (CR) = '.number_format($ahpResults['cr'], 4).' (>= 0.1). Perbandingan AHP tidak konsisten. Silakan perbaiki perbandingan.';
-                } else {
-                    // Get fresh weights after saving
-                    $weights = $this->ahpService->getWeightsFromCriteria(null);
-                    $results = $this->cocosoService->calculateRanking($weights, $criteria);
-                }
+            if (empty($ahpResults) || ! isset($ahpResults['weights'])) {
+                $error = 'Perbandingan AHP belum lengkap. Silakan lakukan perbandingan berpasangan di halaman AHP.';
+            } elseif (isset($ahpResults['cr']) && $ahpResults['cr'] >= 0.1) {
+                $error = 'Consistency Ratio (CR) = '.number_format($ahpResults['cr'], 4).' (>= 0.1). Perbandingan AHP tidak konsisten. Silakan perbaiki perbandingan.';
             } else {
-                // Check consistency via AHP (but don't require recalculation)
-                $ahpResults = $this->ahpService->calculateWeights();
-                if (isset($ahpResults['cr']) && $ahpResults['cr'] >= 0.1) {
-                    $error = 'Consistency Ratio (CR) = '.number_format($ahpResults['cr'], 4).' (>= 0.1). Perbandingan AHP tidak konsisten. Silakan perbaiki perbandingan.';
-                } else {
-                    $results = $this->cocosoService->calculateRanking($weights, $criteria);
-                }
+                // --- PERBAIKAN UTAMA ---
+                // Kirim $ahpResults['weights'] bukan dari getWeightsFromCriteria agar formatnya 
+                // sama persis dengan yang dipakai di method ranking() dan sesuai ekspektasi service.
+                $results = $this->cocosoService->calculateRanking($ahpResults['weights'], $criteria);
             }
         }
 
@@ -99,7 +78,7 @@ class COCOSOController extends Controller
     }
 
     /**
-     * MENYELAMATKAN METHOD RANKING YANG TERHAPUS
+     * METHOD RANKING UNTUK HALAMAN DEPAN / HASIL AKHIR
      */
     public function ranking()
     {
@@ -118,6 +97,8 @@ class COCOSOController extends Controller
         }
 
         $criteria = Criteria::whereNull('submission_id')->orderBy('id')->get();
+        
+        // Memanggil service dengan format array dari calculateWeights()
         $results = $this->cocosoService->calculateRanking($ahpResults['weights'], $criteria);
 
         if (auth()->check()) {

@@ -28,7 +28,13 @@ class AHPService
     }
 
     $normalizedMatrix = $this->normalizeMatrix($matrix, $n);
-    $weights = $this->calculateEigenvector($matrix, $n);
+    $vektor = [];
+    for ($i = 0; $i < $n; $i++) {
+        $sumVector = 0;
+        foreach ($normalizedMatrix[$i] as $val) $sumVector += $val;
+        $vektor[$i] = $sumVector;
+    }
+    $weights = $this->calculateEigenvector($normalizedMatrix, $n);
     $consistencyResult = $this->calculateConsistencyRatio($matrix, $weights, $n);
 
     // 2. Kumpulkan bobot kriteria (bulatkan ke 2 desimal di sini)
@@ -42,7 +48,7 @@ class AHPService
         $weightedCriteria[$crit->id] = [
             'criteria_id' => $crit->id,
             'name' => $crit->name,
-            'weight' => $weightRounded2,
+            'weight' => $weight,
         ];
     }
 
@@ -56,12 +62,15 @@ class AHPService
 
     // 4. Return hasil: Hitungan asli tetap akurat, tapi yang dikirim ke View sudah bulat
     return [
-        'weightsIndexed' => array_map(fn($w) => round($w, 2), $weights),
+        'weightsRaw' => $weights,
+        'weightsIndexed' => array_map(fn($w) => round($w, 4), $weights),
         'weights' => $weightedCriteria,
         'cr' => round($consistencyResult['cr'], 2),
         'ri' => $consistencyResult['ri'],
         'ci' => round($consistencyResult['ci'], 2),
         'lambdaMax' => round($consistencyResult['lambdaMax'], 2),
+        'eigenValues' => $consistencyResult['eigenValues'],
+        'vektor' => $vektor,
         'matrix' => $displayMatrix, // Matriks ini yang akan tampil di tabel hijau (Sudah 2 digit!)
         'normalizedMatrix' => $normalizedMatrix,
         'criteria' => $criteria->values()->all(),
@@ -175,15 +184,15 @@ class AHPService
         return $normalizedMatrix;
     }
 
-    private function calculateEigenvector($matrix, $n)
+    private function calculateEigenvector($normalizedMatrix, $n)
     {
         $weights = [];
         for ($i = 0; $i < $n; $i++) {
-            $product = 1.0;
+            $sum = 0;
             for ($j = 0; $j < $n; $j++) {
-                $product = $this->round_custom($product * $matrix[$i][$j]);
+                $sum = $this->round_custom($sum + $normalizedMatrix[$i][$j]);
             }
-            $weights[$i] = $this->round_custom(pow($product, 1 / $n));
+            $weights[$i] = $this->round_custom($sum / $n);
         }
 
         $sum = 0;
@@ -203,24 +212,23 @@ class AHPService
     private function calculateConsistencyRatio($matrix, $weights, $n)
     {
         if ($n <= 2) {
-            return ['cr' => 0, 'ri' => 0, 'ci' => 0, 'lambdaMax' => 0];
+            return ['cr' => 0, 'ri' => 0, 'ci' => 0, 'lambdaMax' => 0, 'eigenValues' => array_fill(0, $n, 0)];
         }
 
-        $ax = [];
-        for ($i = 0; $i < $n; $i++) {
-            $ax[$i] = 0;
-            for ($j = 0; $j < $n; $j++) {
-                $ax[$i] = $this->round_custom($ax[$i] + $this->round_custom($matrix[$i][$j] * $weights[$j]));
+        $columnSums = array_fill(0, $n, 0);
+        for ($j = 0; $j < $n; $j++) {
+            for ($i = 0; $i < $n; $i++) {
+                $columnSums[$j] = $this->round_custom($columnSums[$j] + $matrix[$i][$j]);
             }
         }
 
+        $eigenValues = [];
         $lambdaMax = 0;
         for ($i = 0; $i < $n; $i++) {
-            if ($weights[$i] != 0) {
-                $lambdaMax = $this->round_custom($lambdaMax + $this->round_custom($ax[$i] / $weights[$i]));
-            }
+            $ev = $this->round_custom($columnSums[$i] * $weights[$i]);
+            $eigenValues[$i] = $ev;
+            $lambdaMax = $this->round_custom($lambdaMax + $ev);
         }
-        $lambdaMax = $this->round_custom($lambdaMax / $n);
 
         $ci = $this->round_custom(($lambdaMax - $n) / ($n - 1));
 
@@ -237,7 +245,8 @@ class AHPService
             'cr' => $cr, 
             'ri' => $riValue, 
             'ci' => $ci, 
-            'lambdaMax' => $lambdaMax
+            'lambdaMax' => $lambdaMax,
+            'eigenValues' => $eigenValues
         ];
     }
 }
