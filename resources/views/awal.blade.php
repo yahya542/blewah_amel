@@ -42,6 +42,7 @@
 <body>
 
     <nav>
+        
         <div class="container nav-content">
             <a href="/" class="logo">SPK<span>-bibit</span></a>
             <div class="nav-links">
@@ -53,6 +54,11 @@
                     @endauth
                 @endif
             </div>
+            <div class="nav-links">
+               <a href="{{ route('kuisioner') }}" class="btn-primary" style="padding: 8px 20px; color: white; margin-left: 15px;"> Isi Kuisioner</a>
+            </div>
+
+            
         </div>
     </nav>
 

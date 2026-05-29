@@ -54,11 +54,17 @@
             <span class="hide-menu">Perhitungan CoCoSo</span>
           </a>
         </li> -->
-        <li class="nav-small-cap">
+<li class="nav-small-cap">
           <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-          <span class="hide-menu">PENGAJUAN</span>
+          <span class="hide-menu">KUISIONER</span>
         </li>
-     
+<li class="sidebar-item">
+          <a class="sidebar-link {{ Request::is('admin/kuesioner*') ? 'active' : '' }}" href="{{ route('admin.kuesioner.dashboard') }}" aria-expanded="false">
+            <span><i class="ti ti-clipboard-list"></i></span>
+            <span class="hide-menu">Data Penliaian</span>
+          </a>
+        </li>
+      
         <li class="nav-small-cap">
           <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
           <span class="hide-menu">HASIL</span>
@@ -74,12 +80,18 @@
            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
            <span class="hide-menu">MENU USER</span>
          </li>
-         <li class="sidebar-item">
-           <a class="sidebar-link {{ Request::is('user/submission*') ? 'active' : '' }}" href="{{ route('user.dashboard') }}" aria-expanded="false">
-             <span><i class="ti ti-file-description"></i></span>
-             <span class="hide-menu">Pengajuan Saya</span>
-           </a>
-         </li>
+<li class="sidebar-item">
+            <a class="sidebar-link {{ Request::is('user/submission*') ? 'active' : '' }}" href="{{ route('user.dashboard') }}" aria-expanded="false">
+              <span><i class="ti ti-file-description"></i></span>
+              <span class="hide-menu">Pengajuan Saya</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ Request::is('kuisioner*') ? 'active' : '' }}" href="{{ route('kuisioner.create') }}" aria-expanded="false">
+              <span><i class="ti ti-clipboard-list"></i></span>
+              <span class="hide-menu">Kuesioner</span>
+            </a>
+          </li>
          <li class="sidebar-item">
            <a class="sidebar-link {{ Request::is('user/profile*') ? 'active' : '' }}" href="{{ route('user.profile.edit') }}" aria-expanded="false">
              <span><i class="ti ti-user"></i></span>

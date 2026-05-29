@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\COCOSOController;
 use App\Http\Controllers\CriteriaController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\KuesionerGroupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserSubmissionController;
 
@@ -72,6 +73,24 @@ Route::middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
     });
 });
 
+// Kuesioner Routes (Public)
+Route::get('/kuisioner', function () {
+    return view('kuisioner');
+})->name('kuisioner');
+
+Route::get('/kuesioner/create', [KuesionerGroupController::class, 'create'])->name('kuisioner.create');
+Route::post('/kuesioner', [KuesionerGroupController::class, 'store'])->name('kuisioner.store');
+Route::get('/kuesioner/{id}/form', [KuesionerGroupController::class, 'showForm'])->name('kuisioner.form');
+Route::post('/kuesioner/{id}/submit', [KuesionerGroupController::class, 'submitJawaban'])->name('kuisioner.submit');
+
+// Admin Kuesioner Routes
+Route::middleware(['auth', 'role:admin'])->prefix('admin/kuesioner')->name('admin.kuesioner.')->group(function () {
+    Route::get('/dashboard', [KuesionerGroupController::class, 'adminDashboard'])->name('dashboard');
+    Route::get('/{id}', [KuesionerGroupController::class, 'adminShow'])->name('show');
+    Route::post('/{id}/eksekusi', [KuesionerGroupController::class, 'eksekusi'])->name('eksekusi');
+    Route::post('/eksekusi-terpilih', [KuesionerGroupController::class, 'eksekusiTerpilih'])->name('eksekusi_terpilih');
+});
+
 // User Routes (Protected)
 Route::middleware(['auth', 'role:user'])->prefix('user')->name('user.')->group(function () {
     Route::get('/dashboard', [UserSubmissionController::class, 'index'])->name('dashboard');
@@ -94,5 +113,9 @@ Route::middleware(['auth', 'role:user'])->prefix('user')->name('user.')->group(f
 
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::get ('/kuisioner', function () {
+        return view('kuisioner');
+    })->name('kuisioner');
 
 });

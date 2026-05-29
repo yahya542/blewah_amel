@@ -32,6 +32,12 @@
                     </div>
                     <div class="col-md-6 text-md-end">
                         @if($submission->status == 'pending')
+                            <form action="{{ route('admin.submissions.auto_process', $submission->id) }}" method="POST" class="d-inline" id="autoProcessForm_{{ $submission->id }}">
+                                @csrf
+                                <button type="submit" class="btn btn-success px-4 py-2" onclick="handleAutoProcess({{ $submission->id }})">
+                                    <i class="ti ti-sparkles me-1"></i> Auto-Process (AHP + CoCoSo)
+                                </button>
+                            </form>
                             <a href="{{ route('admin.submissions.input_result', $submission->id) }}" class="btn btn-primary px-4 py-2">
                                 <i class="ti ti-edit me-1"></i> Input Hasil Manual
                             </a>
@@ -150,4 +156,41 @@
         </div>
     </div>
 </div>
+
+<script>
+function handleAutoProcess(id) {
+    const form = document.getElementById('autoProcessForm_' + id);
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memproses...';
+    
+    form.onsubmit = function(e) {
+        e.preventDefault();
+    };
+    
+    fetch('/admin/submissions/' + id + '/auto-process', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Sukses: ' + data.message);
+            location.reload();
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ti ti-sparkles me-1"></i> Auto-Process (AHP + CoCoSo)';
+            alert('Error: ' + (data.message || 'Terjadi kesalahan'));
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-sparkles me-1"></i> Auto-Process (AHP + CoCoSo)';
+        alert('Error: ' + error.message);
+    });
+}
+</script>
 @endsection
