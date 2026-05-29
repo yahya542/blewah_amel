@@ -82,6 +82,11 @@ Route::get('/kuesioner/create', [KuesionerGroupController::class, 'create'])->na
 Route::post('/kuesioner', [KuesionerGroupController::class, 'store'])->name('kuisioner.store');
 Route::get('/kuesioner/{id}/form', [KuesionerGroupController::class, 'showForm'])->name('kuisioner.form');
 Route::post('/kuesioner/{id}/submit', [KuesionerGroupController::class, 'submitJawaban'])->name('kuisioner.submit');
+Route::delete('/admin/kuesioner/delete-terpilih', [KuesionerGroupController::class, 'destroyTerpilih'])
+    ->name('admin.kuesioner.destroyTerpilih');
+Route::get('/admin/kuesioner/hasil', [KuesionerGroupController::class, 'tampilkanHasil'])
+    ->name('admin.kuesioner.hasil');
+
 
 // Admin Kuesioner Routes
 Route::middleware(['auth', 'role:admin'])->prefix('admin/kuesioner')->name('admin.kuesioner.')->group(function () {

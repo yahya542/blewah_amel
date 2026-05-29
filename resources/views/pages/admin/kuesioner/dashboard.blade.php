@@ -77,59 +77,108 @@
         @endif
         
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Dashboard Kuesioner</h4>
-                <form action="{{ route('admin.kuesioner.eksekusi_terpilih') }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Eksekusi rata-rata dari data terpilih?')">
-                        <i class="bi bi-sparkles"></i> Eksekusi Terpilih
-                    </button>
-                </form>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th width="40"><input type="checkbox" id="checkAll"></th>
-                                <th>ID</th>
-                                <th>Nama Responden</th>
-                                <th>Usia</th>
-                                <th>Tanggal</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($kuesioners as $k)
-                                <tr>
-                                    <td><input type="checkbox" name="kuesioner_ids[]" value="{{ $k->id }}" class="form-check-input"></td>
-                                    <td>{{ $k->id }}</td>
-                                    <td>{{ $k->nama_responden }}</td>
-                                    <td>{{ $k->usia }} tahun</td>
-                                    <td>{{ $k->created_at->format('d M Y H:i') }}</td>
-                                    <td>
-                                        @if($k->status == 'pending')
-                                            <span class="badge bg-warning">Menunggu</span>
-                                        @else
-                                            <span class="badge bg-success">Selesai</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="6" class="text-center py-4 text-muted">Tidak ada data kuesioner.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+            <!-- MEMBUNGKUS KESELURUHAN DENGAN SATU FORM -->
+            <form id="form-kuesioner" method="POST">
+                @csrf
+                <!-- Wadah manipulasi @method('DELETE') via JavaScript -->
+                <div id="method-container"></div>
+
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Dashboard Kuesioner</h4>
+                    <div>
+                        <!-- Tombol diubah menjadi type="button" agar ditangani Javascript terlebih dahulu -->
+                        <button type="button" class="btn btn-success btn-sm me-2" onclick="submitForm('execute')">
+                            <i class="bi bi-sparkles"></i> Eksekusi Terpilih
+                        </button>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="submitForm('delete')">
+                            <i class="bi bi-trash"></i> Hapus Terpilih
+                        </button>
+                    </div>
                 </div>
-            </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th width="40"><input type="checkbox" id="checkAll" class="form-check-input"></th>
+                                    <th>ID</th>
+                                    <th>Nama Responden</th>
+                                    <th>Usia</th>
+                                    <th>Tanggal</th>
+                                    <th>Status</th>
+                                </tr>
+                            </tbody>
+                            <tbody>
+                                @forelse($kuesioners as $k)
+                                    <tr>
+                                        <!-- Tambahkan class 'checkbox-item' untuk mempermudah seleksi Javascript -->
+                                        <td><input type="checkbox" name="kuesioner_ids[]" value="{{ $k->id }}" class="form-check-input checkbox-item"></td>
+                                        <td>{{ $k->id }}</td>
+                                        <td>{{ $k->nama_responden }}</td>
+                                        <td>{{ $k->usia }} tahun</td>
+                                        <td>{{ $k->created_at->format('d M Y H:i') }}</td>
+                                        <td>
+                                            @if($k->status == 'pending')
+                                                <span class="badge bg-warning">Menunggu</span>
+                                            @else
+                                                <span class="badge bg-success">Selesai</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="6" class="text-center py-4 text-muted">Tidak ada data kuesioner.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
+    <!-- LOGIKA JAVASCRIPT DINAMIS DI LUAR DIV (PALING BAWAH) -->
     <script>
+        // Fungsi Check All
         document.getElementById('checkAll').addEventListener('change', function() {
-            let checkboxes = document.querySelectorAll('.form-check-input');
+            let checkboxes = document.querySelectorAll('.checkbox-item');
             checkboxes.forEach(cb => cb.checked = this.checked);
         });
+
+        // Fungsi Pengalih Rute Form
+        function submitForm(actionType) {
+            let form = document.getElementById('form-kuesioner');
+            let container = document.getElementById('method-container');
+            let checkboxes = document.querySelectorAll('.checkbox-item:checked');
+            
+            // Validasi jika belum ada yang dicentang sama sekali
+            if (checkboxes.length === 0) {
+                alert('Silakan pilih minimal satu data kuesioner terlebih dahulu!');
+                return;
+            }
+
+            // Bersihkan kontainer method override bawaan Laravel terlebih dahulu
+            container.innerHTML = '';
+
+            if (actionType === 'execute') {
+                if (confirm('Eksekusi rata-rata dari ' + checkboxes.length + ' data terpilih?')) {
+                    form.action = "{{ route('admin.kuesioner.eksekusi_terpilih') }}"; 
+                    form.submit();
+                }
+            } else if (actionType === 'delete') {
+                if (confirm('Apakah Anda yakin ingin menghapus ' + checkboxes.length + ' data kuesioner terpilih?')) {
+                    // Membuat dan menyisipkan elemen <input name="_method" value="DELETE"> secara dinamis
+                    let hiddenMethod = document.createElement('input');
+                    hiddenMethod.setAttribute('type', 'hidden');
+                    hiddenMethod.setAttribute('name', '_method');
+                    hiddenMethod.setAttribute('value', 'DELETE');
+                    container.appendChild(hiddenMethod);
+                    
+                    form.action = "{{ route('admin.kuesioner.destroyTerpilih') }}";
+                    form.submit();
+                }
+            }
+        }
     </script>
+    <script src="https://jsdelivr.net"></script>
 </body>
 </html>

@@ -48,6 +48,12 @@
             <span class="hide-menu">AHP dan COCOSO</span>
           </a>
         </li>
+        <li class="sidebar-item">
+          <a class="sidebar-link {{ Request::is('ranking*') ? 'active' : '' }}" href="{{ route('admin.ranking') }}" aria-expanded="false">
+            <span><i class="ti ti-trophy"></i></span>
+            <span class="hide-menu">Hasil Ranking</span>
+          </a>
+        </li>
         <!-- <li class="sidebar-item">
           <a class="sidebar-link {{ Request::is('cocoso*') ? 'active' : '' }}" href="{{ route('admin.cocoso.index') }}" aria-expanded="false">
             <span><i class="ti ti-math-function"></i></span>
@@ -57,24 +63,24 @@
 <li class="nav-small-cap">
           <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
           <span class="hide-menu">KUISIONER</span>
+          
         </li>
+        
 <li class="sidebar-item">
           <a class="sidebar-link {{ Request::is('admin/kuesioner*') ? 'active' : '' }}" href="{{ route('admin.kuesioner.dashboard') }}" aria-expanded="false">
             <span><i class="ti ti-clipboard-list"></i></span>
             <span class="hide-menu">Data Penliaian</span>
           </a>
         </li>
-      
-        <li class="nav-small-cap">
-          <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-          <span class="hide-menu">HASIL</span>
-        </li>
-        <li class="sidebar-item">
-          <a class="sidebar-link {{ Request::is('ranking*') ? 'active' : '' }}" href="{{ route('admin.ranking') }}" aria-expanded="false">
-            <span><i class="ti ti-trophy"></i></span>
-            <span class="hide-menu">Hasil Ranking</span>
+<li class="sidebar-item">
+          <a class="sidebar-link {{ Request::is('admin/kuesioner/hasil') ? 'active' : '' }}" href="{{ route('admin.kuesioner.hasil') }}" aria-expanded="false">
+            <span><i class="ti ti-chart-bar"></i></span>
+            <span class="hide-menu">Hasil Ranking Kuisioner</span>
           </a>
         </li>
+      
+        
+        
          @else
          <li class="nav-small-cap">
            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>

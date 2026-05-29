@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\KuesionerGroup;
 use App\Models\Kuesioner;
+use App\Models\KuesionerComparison;
+use App\Models\KuesionerScore;
 use App\Services\AHPService;
 use App\Services\COCOSOService;
 use Illuminate\Http\Request;
@@ -56,24 +58,33 @@ class KuesionerGroupController extends Controller
         
         $request->validate([
             'nama_responden' => 'required|string|max:255',
-            'usia' => 'required|integer|min:1|max:120',
-            'kriteria.*' => 'required|numeric|min:1|max:9',
-            'varietas.*' => 'required|numeric|min:1|max:100',
+            'usia'           => 'required|integer|min:1|max:120',
+            'kriteria'       => 'required|array',
+            'varietas'       => 'required|array',
         ]);
 
+        $n = 6; // 6 kriteria
+        $m = 5; // 5 varietas blewah
+
+        // Build full n×n matrix from upper-triangle radio answers
         $kriteriaValues = [];
-        for ($i = 0; $i < 5; $i++) {
-            for ($j = 0; $j < 5; $j++) {
-                $val = $request->kriteria[$i][$j] ?? 1;
-                $kriteriaValues[$i][$j] = (double)$val;
+        for ($i = 0; $i < $n; $i++) {
+            for ($j = 0; $j < $n; $j++) {
+                if ($i === $j) {
+                    $kriteriaValues[$i][$j] = 1.0;
+                } elseif ($i < $j) {
+                    $val = (double)($request->kriteria[$i][$j] ?? 1);
+                    $kriteriaValues[$i][$j] = $val;
+                    $kriteriaValues[$j][$i] = $val != 0 ? 1.0 / $val : 1.0;
+                }
             }
         }
 
+        // Likert values: varietas[vIdx][cIdx] => score 1-5
         $varietasValues = [];
-        for ($i = 0; $i < 5; $i++) {
-            for ($j = 0; $j < 5; $j++) {
-                $val = $request->varietas[$i][$j] ?? 50;
-                $varietasValues[$i][$j] = (double)$val;
+        for ($i = 0; $i < $m; $i++) {
+            for ($j = 0; $j < $n; $j++) {
+                $varietasValues[$i][$j] = (double)($request->varietas[$i][$j] ?? 3);
             }
         }
 
@@ -83,27 +94,26 @@ class KuesionerGroupController extends Controller
             'status' => 'pending',
         ]);
 
-        $kriteriaNames = ['Waktu Panen', 'Mobilitas Tanah', 'Ketersediaan Air', 'Kemudahan Perawatan', 'Hasil Pertanian'];
-        for ($i = 0; $i < 5; $i++) {
-            for ($j = 0; $j < 5; $j++) {
+        $kriteriaNames = ['Waktu Panen', 'Jumlah Buah', 'Ketahanan Penyakit', 'Kualitas Buah', 'Berat Buah', 'Harga Bibit'];
+        for ($i = 0; $i < $n; $i++) {
+            for ($j = 0; $j < $n; $j++) {
                 KuesionerComparison::create([
-                    'kuesioner_id' => $kuesionerIndividual->id,
+                    'kuesioner_id'  => $kuesionerIndividual->id,
                     'kriteria_from' => $kriteriaNames[$i],
-                    'kriteria_to' => $kriteriaNames[$j],
-                    'value' => $kriteriaValues[$i][$j],
+                    'kriteria_to'   => $kriteriaNames[$j],
+                    'value'         => $kriteriaValues[$i][$j],
                 ]);
             }
         }
 
-        $varietasNames = ['A1 Golden Aroma', 'A2 Red Velvet', 'A3 Long Staple', 'A4 Premium', 'A5 Classic'];
-        $criteriaNames = ['Waktu Panen', 'Mobilitas Tanah', 'Ketersediaan Air', 'Kemudahan Perawatan', 'Hasil Pertanian'];
-        for ($i = 0; $i < 5; $i++) {
-            for ($j = 0; $j < 5; $j++) {
+        $varietasNames = ['A1 Golden Aroma', 'A2 Varietas Aruna', 'A3 Sweet Net', 'A4 King Blewah', 'A5 Rangipo'];
+        for ($i = 0; $i < $m; $i++) {
+            for ($j = 0; $j < $n; $j++) {
                 KuesionerScore::create([
                     'kuesioner_id' => $kuesionerIndividual->id,
-                    'varietas' => $varietasNames[$i],
-                    'kriteria' => $criteriaNames[$j],
-                    'score' => $varietasValues[$i][$j],
+                    'varietas'     => $varietasNames[$i],
+                    'kriteria'     => $kriteriaNames[$j],
+                    'score'        => $varietasValues[$i][$j],
                 ]);
             }
         }
@@ -153,17 +163,23 @@ class KuesionerGroupController extends Controller
         $hasilAHP = $this->hitungAHP($rataRataKriteria);
         $hasilCoCoSo = $this->hitungCoCoSo($rataRataVarietas, $hasilAHP);
 
+        $hasilAkhirData = [
+            'ranking' => $hasilCoCoSo,
+            'weights' => $hasilAHP['weights'] ?? [],
+            'cr' => $hasilAHP['cr'] ?? 0,
+            'total_responden' => $totalResponden,
+            'calculated_at' => now()->toIso8601String(),
+        ];
+
         $group->update([
             'status' => 'processed',
-            'hasil_akhir_json' => [
-                'ranking' => $hasilCoCoSo,
-                'weights' => $hasilAHP['weights'],
-                'cr' => $hasilAHP['cr'],
-                'calculated_at' => now()->toIso8601String(),
-            ],
+            'hasil_akhir_json' => $hasilAkhirData,
         ]);
 
-        return back()->with('success', 'Eksekusi berhasil! Hasil perhitungan tersimpan.');
+        return redirect()->route('admin.kuesioner.hasil')->with([
+            'success' => 'Kalkulasi grup berhasil dieksekusi!',
+            'data_hasil' => $hasilAkhirData
+        ]);
     }
 
     public function adminDashboard()
@@ -182,13 +198,16 @@ class KuesionerGroupController extends Controller
         $kuesionerTerpilih = Kuesioner::with(['comparisons', 'scores'])->whereIn('id', $ids)->get();
         $totalResponden = $kuesionerTerpilih->count();
 
-        $totalKriteria = [];
+        $kriteriaRawValues = [];
         $totalVarietas = [];
 
         foreach ($kuesionerTerpilih as $k) {
             foreach ($k->comparisons as $comp) {
-                $key = $comp->kriteria_from . '_' . $comp->kriteria_to;
-                $totalKriteria[$key] = ($totalKriteria[$key] ?? 0) + (double)$comp->value;
+                // Hanya ambil yang kriteria_from != kriteria_to untuk agregasi
+                if ($comp->kriteria_from !== $comp->kriteria_to) {
+                    $key = $comp->kriteria_from . '_' . $comp->kriteria_to;
+                    $kriteriaRawValues[$key][] = (double)$comp->value;
+                }
             }
 
             foreach ($k->scores as $score) {
@@ -197,18 +216,24 @@ class KuesionerGroupController extends Controller
             }
         }
 
-        $kriteriaKeys = ['Waktu Panen', 'Mobilitas Tanah', 'Ketersediaan Air', 'Kemudahan Perawatan', 'Hasil Pertanian'];
-        $rataRataKriteria = [];
+        $kriteriaKeys = ['Waktu Panen', 'Jumlah Buah', 'Ketahanan Penyakit', 'Kualitas Buah', 'Berat Buah', 'Harga Bibit'];
+        $rataRataKriteria = []; 
+        
+        // Agregasi AHP menggunakan Geometric Mean
         foreach ($kriteriaKeys as $i => $kriteriaFrom) {
             foreach ($kriteriaKeys as $j => $kriteriaTo) {
                 $key = $kriteriaFrom . '_' . $kriteriaTo;
-                if (isset($totalKriteria[$key])) {
-                    $rataRataKriteria[$i][$j] = $totalKriteria[$key] / $totalResponden;
+                if (isset($kriteriaRawValues[$key])) {
+                    $vals = $kriteriaRawValues[$key];
+                    $product = 1.0;
+                    foreach ($vals as $v) { $product *= ($v > 0 ? $v : 1); }
+                    $rataRataKriteria[$i][$j] = pow($product, 1 / count($vals));
                 }
             }
         }
 
-        $varietasKeys = ['A1 Golden Aroma', 'A2 Red Velvet', 'A3 Long Staple', 'A4 Premium', 'A5 Classic'];
+        // Agregasi CoCoSo menggunakan Arithmetic Mean (Rata-rata biasa)
+        $varietasKeys = ['A1 Golden Aroma', 'A2 Varietas Aruna', 'A3 Sweet Net', 'A4 King Blewah', 'A5 Rangipo'];
         $rataRataVarietas = [];
         foreach ($varietasKeys as $varietas) {
             foreach ($kriteriaKeys as $kriteria) {
@@ -222,37 +247,79 @@ class KuesionerGroupController extends Controller
         $hasilAHP = $this->hitungAHPDariArray($rataRataKriteria);
         $hasilCoCoSo = $this->hitungCoCoSoDariArray($rataRataVarietas, $hasilAHP);
 
+        $hasilAkhirData = [
+            'ranking' => $hasilCoCoSo,
+            'weights' => $hasilAHP['weights'],
+            'cr' => $hasilAHP['cr'],
+            'total_responden' => $totalResponden,
+            'calculated_at' => now()->toIso8601String(),
+        ];
+
         Kuesioner::whereIn('id', $ids)->update([
             'status' => 'processed',
-            'hasil_json' => [
-                'ranking' => $hasilCoCoSo,
-                'weights' => $hasilAHP['weights'],
-                'cr' => $hasilAHP['cr'],
-                'calculated_at' => now()->toIso8601String(),
-            ],
+            'hasil_json' => $hasilAkhirData,
         ]);
 
-        return redirect()->route('admin.kuesioner.dashboard')->with('success', 'Eksekusi berhasil! ' . $totalResponden . ' data telah diproses.');
+        return redirect()->route('admin.kuesioner.hasil')->with([
+            'success' => 'Eksekusi berhasil! ' . $totalResponden . ' data telah diproses.',
+            'data_hasil' => $hasilAkhirData
+        ]);
     }
+
+    public function tampilkanHasil()
+    {
+        $data = session('data_hasil');
+        
+        // Jika tidak ada data di session (misal akses langsung), ambil data terakhir dari DB
+        if (!$data) {
+            $latest = Kuesioner::where('status', 'processed')->whereNotNull('hasil_json')->latest()->first();
+            if ($latest) {
+                $data = $latest->hasil_json;
+            }
+        }
+
+        return view('pages.admin.kuesioner.hasil', compact('data'));
+    }
+
+    // fitur delete 
+    public function destroyTerpilih(Request $request)
+{
+    $ids = $request->input('kuesioner_ids');
+    
+    if (empty($ids)) {
+        return back()->with('error', 'Silakan pilih minimal satu data kuesioner yang ingin dihapus!');
+    }
+
+    // Hapus data relasi terlebih dahulu (jika tidak pakai cascade delete di database)
+    KuesionerComparison::whereIn('kuesioner_id', $ids)->delete();
+    KuesionerScore::whereIn('kuesioner_id', $ids)->delete();
+
+    // Hapus data utama kuesioner
+    Kuesioner::whereIn('id', $ids)->delete();
+
+    return back()->with('success', count($ids) . ' data kuesioner berhasil dihapus.');
+}
+
 
     private function hitungRataRataKriteria($semuaOrang, $totalResponden)
     {
-        $rataRataKriteria = [];
-
+        $rawValues = [];
         foreach ($semuaOrang as $orang) {
-            foreach ($orang['kriteria'] as $idx => $baris) {
-                foreach ($baris as $j => $nilai) {
-                    $key = "q" . ($idx + 1) . "_" . ($j + 1);
-                    if (!isset($rataRataKriteria[$key])) {
-                        $rataRataKriteria[$key] = 0;
+            foreach ($orang['kriteria'] as $i => $row) {
+                foreach ($row as $j => $val) {
+                    if ($i < $j) {
+                        $key = "q" . ($i + 1) . "_" . ($j + 1);
+                        $rawValues[$key][] = (double)$val;
                     }
-                    $rataRataKriteria[$key] += (double)$nilai;
                 }
             }
         }
 
-        foreach ($rataRataKriteria as $key => $totalNilai) {
-            $rataRataKriteria[$key] = $totalNilai / $totalResponden;
+        $rataRataKriteria = [];
+        foreach ($rawValues as $key => $vals) {
+            $product = 1.0;
+            foreach ($vals as $v) { $product *= ($v > 0 ? $v : 1); }
+            $rataRataKriteria[$key] = pow($product, 1 / count($vals));
         }
 
         return $rataRataKriteria;
@@ -283,319 +350,281 @@ class KuesionerGroupController extends Controller
 
     private function hitungAHP($rataRataKriteria)
     {
-        $n = 5;
-        $kriteriaKeys = ['q1', 'q2', 'q3', 'q4', 'q5'];
-        
-        $matrix = [];
-        foreach ($kriteriaKeys as $i) {
-            foreach ($kriteriaKeys as $j) {
-                $matrix[$i][$j] = ($i === $j) ? 1.0 : 0.0;
-            }
-        }
+        $n = 6; // 6 kriteria blewah
+        $kriteriaNames = ['Waktu Panen', 'Jumlah Buah', 'Ketahanan Penyakit', 'Kualitas Buah', 'Berat Buah', 'Harga Bibit'];
 
+        // Build full matrix with Inverted Scale Logic
+        $matrix = array_fill(0, $n, array_fill(0, $n, 1.0));
         for ($i = 0; $i < $n; $i++) {
+            for ($j = $i + 1; $j < $n; $j++) {
+                $key = "q" . ($i + 1) . "_" . ($j + 1);
+                $meanValue = $rataRataKriteria[$key] ?? 1.0;
+                // Skala: Angka tinggi berarti Kriteria KEDUA (j) lebih penting
+                $matrix[$j][$i] = $meanValue;
+                $matrix[$i][$j] = $meanValue != 0 ? 1.0 / $meanValue : 1.0;
+            }
+        }
+
+        // --- METHOD 3: GEOMETRIC MEAN OF ROWS (Most Precise Method) ---
+        $rowGeoMeans = [];
+        for ($i = 0; $i < $n; $i++) {
+            $product = 1.0;
             for ($j = 0; $j < $n; $j++) {
-                if ($i !== $j && $matrix[$kriteriaKeys[$i]][$kriteriaKeys[$j]] === 0.0) {
-                    $val1 = $rataRataKriteria[$kriteriaKeys[$i]] ?? 0;
-                    $val2 = $rataRataKriteria[$kriteriaKeys[$j]] ?? 0;
-                    $val = ($val2 != 0) ? $val1 / $val2 : 1;
-                    $matrix[$kriteriaKeys[$i]][$kriteriaKeys[$j]] = $val;
-                    $matrix[$kriteriaKeys[$j]][$kriteriaKeys[$i]] = ($val != 0) ? 1 / $val : 1;
-                }
+                $product *= $matrix[$i][$j];
             }
+            $rowGeoMeans[$i] = pow($product, 1 / $n);
         }
 
-        $columnSums = [];
-        foreach ($kriteriaKeys as $j) {
-            $sum = 0;
-            foreach ($kriteriaKeys as $i) {
-                $sum += $matrix[$kriteriaKeys[$i]][$j];
-            }
-            $columnSums[$j] = $sum;
-        }
-
+        $sumGeoMeans = array_sum($rowGeoMeans);
         $weights = [];
-        foreach ($kriteriaKeys as $i) {
-            $rowSum = 0;
-            foreach ($kriteriaKeys as $j) {
-                $rowSum += $columnSums[$j] != 0 ? $matrix[$kriteriaKeys[$i]][$j] / $columnSums[$j] : 0;
-            }
-            $weights[$i] = $rowSum / $n;
+        for ($i = 0; $i < $n; $i++) {
+            $weights[$i] = ($sumGeoMeans != 0) ? $rowGeoMeans[$i] / $sumGeoMeans : 1 / $n;
         }
 
+        // Lambda max
         $lambdaMax = 0;
-        foreach ($kriteriaKeys as $i) {
+        for ($i = 0; $i < $n; $i++) {
             $rowSumProduct = 0;
-            foreach ($kriteriaKeys as $j) {
-                $rowSumProduct += $matrix[$kriteriaKeys[$i]][$j] * $weights[$j];
+            for ($j = 0; $j < $n; $j++) {
+                $rowSumProduct += $matrix[$i][$j] * $weights[$j];
             }
-            $lambdaMax += $weights[$kriteriaKeys[$i]] != 0 ? $rowSumProduct / $weights[$kriteriaKeys[$i]] : 0;
+            $lambdaMax += $weights[$i] != 0 ? $rowSumProduct / $weights[$i] : 0;
         }
-        $lambdaMax = $lambdaMax / $n;
+        $lambdaMax /= $n;
 
         $ci = ($n > 1) ? ($lambdaMax - $n) / ($n - 1) : 0;
-        $ri = [1 => 0, 2 => 0, 3 => 0.58, 4 => 0.90, 5 => 1.12][$n] ?? 1.12;
+        $ri = [1 => 0, 2 => 0, 3 => 0.58, 4 => 0.90, 5 => 1.12, 6 => 1.00, 7 => 1.32][$n] ?? 1.00;
         $cr = ($ri > 0) ? $ci / $ri : 0;
 
         $weightsList = [];
-        $kriteriaNames = ['Waktu Panen', 'Mobilitas Tanah', 'Ketersediaan Air', 'Kemudahan Perawatan', 'Hasil Pertanian'];
-        foreach ($kriteriaKeys as $idx => $key) {
+        for ($idx = 0; $idx < $n; $idx++) {
             $weightsList[] = [
-                'name' => $kriteriaNames[$idx],
-                'weight' => round($weights[$key], 4),
+                'name'   => $kriteriaNames[$idx],
+                'weight' => round($weights[$idx], 6),
             ];
         }
 
         return [
-            'weights' => $weightsList,
-            'cr' => round($cr, 4),
-            'ci' => round($ci, 4),
-            'ri' => $ri,
+            'weights'    => $weightsList,
+            'cr'         => round($cr, 4),
+            'ci'         => round($ci, 4),
+            'ri'         => $ri,
             'n_criteria' => $n,
         ];
     }
 
     private function hitungAHPDariArray($rataRataKriteria)
     {
-        $n = 5;
-        $kriteriaKeys = ['c1', 'c2', 'c3', 'c4', 'c5'];
-        
-        $matrix = [];
-        foreach ($kriteriaKeys as $i) {
-            foreach ($kriteriaKeys as $j) {
-                $matrix[$i][$j] = ($i === $j) ? 1.0 : 0.0;
-            }
-        }
+        $n = 6;
+        $kriteriaNames = ['Waktu Panen', 'Jumlah Buah', 'Ketahanan Penyakit', 'Kualitas Buah', 'Berat Buah', 'Harga Bibit'];
 
+        // Build Full Matrix with Inverted Scale Logic
+        // IF i < j AND mean value V is given, then j (second) is V times as important as i (first).
+        $matrix = array_fill(0, $n, array_fill(0, $n, 1.0));
         for ($i = 0; $i < $n; $i++) {
+            for ($j = $i + 1; $j < $n; $j++) {
+                $meanValue = $rataRataKriteria[$i][$j] ?? 1.0;
+                // Skala: Angka tinggi berarti Kriteria KEDUA (j) lebih penting
+                $matrix[$j][$i] = $meanValue;
+                $matrix[$i][$j] = $meanValue != 0 ? 1.0 / $meanValue : 1.0;
+            }
+        }
+
+        // --- METHOD 3: GEOMETRIC MEAN OF ROWS (Most Precise Method) ---
+        $rowGeoMeans = [];
+        for ($i = 0; $i < $n; $i++) {
+            $product = 1.0;
             for ($j = 0; $j < $n; $j++) {
-                if ($i !== $j && $matrix[$kriteriaKeys[$i]][$kriteriaKeys[$j]] === 0.0) {
-                    $val = isset($rataRataKriteria[$i][$j]) ? $rataRataKriteria[$i][$j] : 1;
-                    $matrix[$kriteriaKeys[$i]][$kriteriaKeys[$j]] = $val;
-                    $matrix[$kriteriaKeys[$j]][$kriteriaKeys[$i]] = ($val != 0) ? 1 / $val : 1;
-                }
+                $product *= $matrix[$i][$j];
             }
+            $rowGeoMeans[$i] = pow($product, 1 / $n);
         }
 
-        $columnSums = [];
-        foreach ($kriteriaKeys as $j) {
-            $sum = 0;
-            foreach ($kriteriaKeys as $i) {
-                $sum += $matrix[$kriteriaKeys[$i]][$j];
-            }
-            $columnSums[$j] = $sum;
-        }
-
+        $sumGeoMeans = array_sum($rowGeoMeans);
         $weights = [];
-        foreach ($kriteriaKeys as $i) {
-            $rowSum = 0;
-            foreach ($kriteriaKeys as $j) {
-                $rowSum += $columnSums[$j] != 0 ? $matrix[$kriteriaKeys[$i]][$j] / $columnSums[$j] : 0;
-            }
-            $weights[$i] = $rowSum / $n;
+        for ($i = 0; $i < $n; $i++) {
+            $weights[$i] = ($sumGeoMeans != 0) ? $rowGeoMeans[$i] / $sumGeoMeans : 1 / $n;
         }
 
         $lambdaMax = 0;
-        foreach ($kriteriaKeys as $i) {
+        for ($i = 0; $i < $n; $i++) {
             $rowSumProduct = 0;
-            foreach ($kriteriaKeys as $j) {
-                $rowSumProduct += $matrix[$kriteriaKeys[$i]][$j] * $weights[$j];
+            for ($j = 0; $j < $n; $j++) {
+                $rowSumProduct += $matrix[$i][$j] * $weights[$j];
             }
-            $lambdaMax += $weights[$kriteriaKeys[$i]] != 0 ? $rowSumProduct / $weights[$kriteriaKeys[$i]] : 0;
+            $lambdaMax += $weights[$i] != 0 ? $rowSumProduct / $weights[$i] : 0;
         }
-        $lambdaMax = $lambdaMax / $n;
+        $lambdaMax /= $n;
 
         $ci = ($n > 1) ? ($lambdaMax - $n) / ($n - 1) : 0;
-        $ri = [1 => 0, 2 => 0, 3 => 0.58, 4 => 0.90, 5 => 1.12][$n] ?? 1.12;
+        $ri = [1 => 0, 2 => 0, 3 => 0.58, 4 => 0.90, 5 => 1.12, 6 => 1.00, 7 => 1.32][$n] ?? 1.00;
         $cr = ($ri > 0) ? $ci / $ri : 0;
 
         $weightsList = [];
-        $kriteriaNames = ['Waktu Panen', 'Mobilitas Tanah', 'Ketersediaan Air', 'Kemudahan Perawatan', 'Hasil Pertanian'];
-        foreach ($kriteriaKeys as $idx => $key) {
+        for ($idx = 0; $idx < $n; $idx++) {
             $weightsList[] = [
-                'name' => $kriteriaNames[$idx],
-                'weight' => round($weights[$key], 4),
+                'name'   => $kriteriaNames[$idx],
+                'weight' => round($weights[$idx], 6),
             ];
         }
 
         return [
-            'weights' => $weightsList,
-            'cr' => round($cr, 4),
-            'ci' => round($ci, 4),
-            'ri' => $ri,
+            'weights'    => $weightsList,
+            'cr'         => round($cr, 4),
+            'ci'         => round($ci, 4),
+            'ri'         => $ri,
             'n_criteria' => $n,
         ];
     }
 
     private function hitungCoCoSo($rataRataVarietas, $ahpWeights)
     {
-        $varietasKeys = ['v1', 'v2', 'v3', 'v4', 'v5'];
-        $kriteriaKeys = ['c1', 'c2', 'c3', 'c4', 'c5'];
+        $n = 6; $m = 5;
+        $varietasNames = ['A1 Golden Aroma', 'A2 Varietas Aruna', 'A3 Sweet Net', 'A4 King Blewah', 'A5 Rangipo'];
         
-        $weightsIndexed = [];
-        foreach ($ahpWeights as $idx => $w) {
-            $weightsIndexed[$kriteriaKeys[$idx]] = $w['weight'];
+        // Weights indexed 0..n-1
+        $weights = [];
+        foreach ($ahpWeights['weights'] as $idx => $w) {
+            $weights[$idx] = $w['weight'];
         }
 
+        // Build scores[v][c] 
         $scores = [];
-        foreach ($varietasKeys as $vk) {
-            foreach ($kriteriaKeys as $ck) {
-                $key = $vk . "_c" . (strpos($ck, 'c') !== false ? substr($ck, 1) : $ck);
-                $scores[$vk][$ck] = $rataRataVarietas[$key] ?? 0;
+        for ($v = 0; $v < $m; $v++) {
+            for ($c = 0; $c < $n; $c++) {
+                $key = 'v' . ($v + 1) . '_c' . ($c + 1);
+                $scores[$v][$c] = (double)($rataRataVarietas[$key] ?? 1.0); // Default to 1.0 to avoid zero
             }
         }
 
+        // Min/Max per column
         $minMax = [];
-        foreach ($kriteriaKeys as $ck) {
-            $colScores = [];
-            foreach ($varietasKeys as $vk) {
-                $colScores[] = $scores[$vk][$ck];
-            }
-            $minMax[$ck]['max'] = max($colScores);
-            $minMax[$ck]['min'] = min($colScores);
+        for ($c = 0; $c < $n; $c++) {
+            $col = array_column($scores, $c);
+            $minMax[$c] = ['min' => min($col), 'max' => max($col)];
         }
 
-        $siValues = [];
-        $piValues = [];
-
-        foreach ($varietasKeys as $vk) {
-            $si = 0;
-            $pi = 1;
-            foreach ($kriteriaKeys as $ck) {
-                $actual = $scores[$vk][$ck];
-                $max = $minMax[$ck]['max'];
-                $min = $minMax[$ck]['min'];
-                $denominator = ($max - $min) == 0 ? 1 : ($max - $min);
-                $r_ij = ($actual - $min) / $denominator;
-                $w_j = $weightsIndexed[$ck];
-                $si += $w_j * $r_ij;
-                $pi *= pow($r_ij > 0 ? $r_ij : 0.0001, $w_j);
+        $siValues = []; $piValues = [];
+        for ($v = 0; $v < $m; $v++) {
+            $si = 0; $pi = 1;
+            for ($c = 0; $c < $n; $c++) {
+                $val = $scores[$v][$c];
+                $min = $minMax[$c]['min'];
+                $max = $minMax[$c]['max'];
+                
+                // Waktu Panen (index 0) dan Harga Bibit (index 5) adalah COST
+                if ($c === 0 || $c === 5) {
+                    $r = ($val != 0) ? ($min / $val) : 0;
+                } else {
+                    $r = ($max != 0) ? ($val / $max) : 0;
+                }
+                
+                $w = $weights[$c];
+                $si += $w * $r;
+                $pi *= pow($r > 0 ? $r : 0.0001, $w);
             }
-            $siValues[$vk] = $si;
-            $piValues[$vk] = $pi;
+            $siValues[$v] = $si;
+            $piValues[$v] = $pi;
         }
 
-        $minS = min($siValues);
-        $maxS = max($siValues);
-        $minP = min($piValues);
-        $maxP = max($piValues);
-
-        $rankingResult = [];
-        $varietasNames = ['A1 Golden Aroma', 'A2 Red Velvet', 'A3 Long Staple', 'A4 Premium', 'A5 Classic'];
+        $minS = min($siValues); $maxS = max($siValues);
+        $minP = min($piValues); $maxP = max($piValues);
         
-        foreach ($varietasKeys as $idx => $vk) {
-            $si = $siValues[$vk];
-            $pi = $piValues[$vk];
-
-            $denomS = ($maxS - $minS) == 0 ? 1 : ($maxS - $minS);
-            $denomP = ($maxP - $minP) == 0 ? 1 : ($maxP - $minP);
-
-            $ka = (($si - $minS) / $denomS) + (($pi - $minP) / $denomP);
+        $rankingResult = [];
+        for ($v = 0; $v < $m; $v++) {
+            $si = $siValues[$v]; $pi = $piValues[$v];
+            
+            $ka = ($maxS + $maxP != 0) ? (($si + $pi) / ($maxS + $maxP)) + 0.5 : 0.5;
             $kb = ($minS != 0 && $minP != 0) ? ($si / $minS) + ($pi / $minP) : 0;
-            $kc = (($si + $pi) / 2) / (($maxS + $maxP) / 2);
-            $qi = pow($ka * $kb * $kc, 1/3) + (($ka + $kb + $kc) / 3);
-
+            $kc = ($maxS + $maxP != 0) ? (0.5 * $si + 0.5 * $pi) / (0.5 * $maxS + 0.5 * $maxP) : 0;
+            
+            $qi = pow($ka * $kb * $kc, 1/3) + ((1/3) * ($ka + $kb + $kc));
+            
             $rankingResult[] = [
-                'name' => $varietasNames[$idx],
-                'si' => round($si, 4),
-                'pi' => round($pi, 4),
-                'ka' => round($ka, 2),
-                'kb' => round($kb, 2),
-                'kc' => round($kc, 2),
-                'qi' => round($qi, 2),
+                'name' => $varietasNames[$v],
+                'si'   => round($si, 4),
+                'pi'   => round($pi, 4),
+                'ka'   => round($ka, 2),
+                'kb'   => round($kb, 2),
+                'kc'   => round($kc, 2),
+                'qi'   => round($qi, 3),
             ];
         }
-
         usort($rankingResult, fn($a, $b) => $b['qi'] <=> $a['qi']);
-        foreach ($rankingResult as $idx => $data) {
-            $rankingResult[$idx]['rank'] = $idx + 1;
-        }
-
         return $rankingResult;
     }
 
     private function hitungCoCoSoDariArray($rataRataVarietas, $ahpWeights)
     {
-        $varietasKeys = ['A1 Golden Aroma', 'A2 Red Velvet', 'A3 Long Staple', 'A4 Premium', 'A5 Classic'];
-        $kriteriaKeys = ['Waktu Panen', 'Mobilitas Tanah', 'Ketersediaan Air', 'Kemudahan Perawatan', 'Hasil Pertanian'];
-        
+        $varietasKeys = ['A1 Golden Aroma', 'A2 Varietas Aruna', 'A3 Sweet Net', 'A4 King Blewah', 'A5 Rangipo'];
+        $kriteriaKeys = ['Waktu Panen', 'Jumlah Buah', 'Ketahanan Penyakit', 'Kualitas Buah', 'Berat Buah', 'Harga Bibit'];
+
         $weightsIndexed = [];
-        foreach ($ahpWeights as $idx => $w) {
+        foreach ($ahpWeights['weights'] as $idx => $w) {
             $weightsIndexed[$kriteriaKeys[$idx]] = $w['weight'];
         }
 
         $scores = [];
         foreach ($varietasKeys as $varietas) {
             foreach ($kriteriaKeys as $kriteria) {
-                $scores[$varietas][$kriteria] = $rataRataVarietas[$varietas][$kriteria] ?? 0;
+                // Likert 1-5, set default 1.0 to avoid zero
+                $scores[$varietas][$kriteria] = (double)($rataRataVarietas[$varietas][$kriteria] ?? 1.0);
             }
         }
 
         $minMax = [];
         foreach ($kriteriaKeys as $ck) {
-            $colScores = [];
-            foreach ($varietasKeys as $vk) {
-                $colScores[] = $scores[$vk][$ck];
-            }
-            $minMax[$ck]['max'] = max($colScores);
-            $minMax[$ck]['min'] = min($colScores);
+            $colScores = array_column(array_map(fn($v) => [$scores[$v][$ck]], $varietasKeys), 0);
+            $minMax[$ck] = ['min' => min($colScores), 'max' => max($colScores)];
         }
 
-        $siValues = [];
-        $piValues = [];
-
+        $siValues = []; $piValues = [];
         foreach ($varietasKeys as $varietas) {
-            $si = 0;
-            $pi = 1;
-            foreach ($kriteriaKeys as $kriteria) {
-                $actual = $scores[$varietas][$kriteria];
-                $max = $minMax[$kriteria]['max'];
+            $si = 0; $pi = 1;
+            foreach ($kriteriaKeys as $idx => $kriteria) {
+                $val = $scores[$varietas][$kriteria];
                 $min = $minMax[$kriteria]['min'];
-                $denominator = ($max - $min) == 0 ? 1 : ($max - $min);
-                $r_ij = ($actual - $min) / $denominator;
-                $w_j = $weightsIndexed[$kriteria];
-                $si += $w_j * $r_ij;
-                $pi *= pow($r_ij > 0 ? $r_ij : 0.0001, $w_j);
+                $max = $minMax[$kriteria]['max'];
+
+                // Waktu Panen (index 0) dan Harga Bibit (index 5) adalah COST
+                if ($idx === 0 || $idx === 5) {
+                    $r = ($val != 0) ? ($min / $val) : 0;
+                } else {
+                    $r = ($max != 0) ? ($val / $max) : 0;
+                }
+
+                $w = $weightsIndexed[$kriteria];
+                $si += $w * $r;
+                $pi *= pow($r > 0 ? $r : 0.0001, $w);
             }
             $siValues[$varietas] = $si;
             $piValues[$varietas] = $pi;
         }
 
-        $minS = min($siValues);
-        $maxS = max($siValues);
-        $minP = min($piValues);
-        $maxP = max($piValues);
+        $minS = min($siValues); $maxS = max($siValues);
+        $minP = min($piValues); $maxP = max($piValues);
 
         $rankingResult = [];
-        
-        foreach ($varietasKeys as $idx => $varietas) {
-            $si = $siValues[$varietas];
-            $pi = $piValues[$varietas];
-
-            $denomS = ($maxS - $minS) == 0 ? 1 : ($maxS - $minS);
-            $denomP = ($maxP - $minP) == 0 ? 1 : ($maxP - $minP);
-
-            $ka = (($si - $minS) / $denomS) + (($pi - $minP) / $denomP);
+        foreach ($varietasKeys as $varietas) {
+            $si = $siValues[$varietas]; $pi = $piValues[$varietas];
+            
+            $ka = ($maxS + $maxP != 0) ? (($si + $pi) / ($maxS + $maxP)) + 0.5 : 0.5;
             $kb = ($minS != 0 && $minP != 0) ? ($si / $minS) + ($pi / $minP) : 0;
-            $kc = (($si + $pi) / 2) / (($maxS + $maxP) / 2);
-            $qi = pow($ka * $kb * $kc, 1/3) + (($ka + $kb + $kc) / 3);
-
+            $kc = ($maxS + $maxP != 0) ? (0.5 * $si + 0.5 * $pi) / (0.5 * $maxS + 0.5 * $maxP) : 0;
+            
+            $qi = pow($ka * $kb * $kc, 1/3) + ((1/3) * ($ka + $kb + $kc));
+            
             $rankingResult[] = [
                 'name' => $varietas,
-                'si' => round($si, 4),
-                'pi' => round($pi, 4),
-                'ka' => round($ka, 2),
-                'kb' => round($kb, 2),
-                'kc' => round($kc, 2),
-                'qi' => round($qi, 2),
+                'si'   => round($si, 4),
+                'pi'   => round($pi, 4),
+                'ka'   => round($ka, 2),
+                'kb'   => round($kb, 2),
+                'kc'   => round($kc, 2),
+                'qi'   => round($qi, 3),
             ];
         }
-
         usort($rankingResult, fn($a, $b) => $b['qi'] <=> $a['qi']);
-        foreach ($rankingResult as $idx => $data) {
-            $rankingResult[$idx]['rank'] = $idx + 1;
-        }
-
         return $rankingResult;
     }
 }
