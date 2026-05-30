@@ -161,7 +161,7 @@
                                 <table class="table table-sm">
                                     <tbody>
                                         @foreach($group->hasil_akhir_json['weights'] as $w)
-                                            <tr><td>{{ $w['name'] }}</td><td class="text-end">{{ number_format($w['weight'], 4) }}</td></tr>
+                                            <tr><td>{{ $w['name'] }}</td><td class="text-end">{{ number_format($w['weight'], 2) }}</td></tr>
                                         @endforeach
                                     </tbody>
                                 </table>
@@ -171,8 +171,8 @@
                                 <table class="table table-sm">
                                     <thead><tr><th>Rank</th><th>Varietas</th><th>Qi</th></tr></thead>
                                     <tbody>
-                                        @foreach($group->hasil_akhir_json['ranking'] as $res)
-                                            <tr><td>#{{ $res['rank'] }}</td><td>{{ $res['name'] }}</td><td class="text-end fw-bold">{{ $res['qi'] }}</td></tr>
+                                        @foreach($group->hasil_akhir_json['ranking'] as $index => $res)
+                                            <tr><td>#{{ $index + 1 }}</td><td>{{ $res['name'] }}</td><td class="text-end fw-bold">{{ number_format($res['qi'], 3) }}</td></tr>
                                         @endforeach
                                     </tbody>
                                 </table>

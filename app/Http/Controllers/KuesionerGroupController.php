@@ -457,7 +457,7 @@ class KuesionerGroupController extends Controller
         $lambdaMax /= $n;
 
         $ci = ($n > 1) ? ($lambdaMax - $n) / ($n - 1) : 0;
-        $ri = [1 => 0, 2 => 0, 3 => 0.58, 4 => 0.90, 5 => 1.12, 6 => 1.00, 7 => 1.32][$n] ?? 1.00;
+        $ri = [1 => 0, 2 => 0, 3 => 0.58, 4 => 0.90, 5 => 1.12, 6 => 1.24, 7 => 1.32][$n] ?? 1.00;
         $cr = ($ri > 0) ? $ci / $ri : 0;
 
         $weightsList = [];
@@ -506,22 +506,23 @@ class KuesionerGroupController extends Controller
 
         $siValues = []; $piValues = [];
         for ($v = 0; $v < $m; $v++) {
-            $si = 0; $pi = 1;
+            $si = 0; $pi = 0;
             for ($c = 0; $c < $n; $c++) {
                 $val = $scores[$v][$c];
                 $min = $minMax[$c]['min'];
                 $max = $minMax[$c]['max'];
                 
-                // Waktu Panen (index 0) dan Harga Bibit (index 5) adalah COST
                 if ($c === 0 || $c === 5) {
-                    $r = ($val != 0) ? ($min / $val) : 0;
+                    // COST
+                    $r = ($max != $min) ? ($max - $val) / ($max - $min) : 1.0;
                 } else {
-                    $r = ($max != 0) ? ($val / $max) : 0;
+                    // BENEFIT
+                    $r = ($max != $min) ? ($val - $min) / ($max - $min) : 1.0;
                 }
                 
                 $w = $weights[$c];
                 $si += $w * $r;
-                $pi *= pow($r > 0 ? $r : 0.0001, $w);
+                $pi += pow($r > 0 ? $r : 0.0001, $w);
             }
             $siValues[$v] = $si;
             $piValues[$v] = $pi;
@@ -580,22 +581,23 @@ class KuesionerGroupController extends Controller
 
         $siValues = []; $piValues = [];
         foreach ($varietasKeys as $varietas) {
-            $si = 0; $pi = 1;
+            $si = 0; $pi = 0;
             foreach ($kriteriaKeys as $idx => $kriteria) {
                 $val = $scores[$varietas][$kriteria];
                 $min = $minMax[$kriteria]['min'];
                 $max = $minMax[$kriteria]['max'];
 
-                // Waktu Panen (index 0) dan Harga Bibit (index 5) adalah COST
                 if ($idx === 0 || $idx === 5) {
-                    $r = ($val != 0) ? ($min / $val) : 0;
+                    // COST
+                    $r = ($max != $min) ? ($max - $val) / ($max - $min) : 1.0;
                 } else {
-                    $r = ($max != 0) ? ($val / $max) : 0;
+                    // BENEFIT
+                    $r = ($max != $min) ? ($val - $min) / ($max - $min) : 1.0;
                 }
 
                 $w = $weightsIndexed[$kriteria];
                 $si += $w * $r;
-                $pi *= pow($r > 0 ? $r : 0.0001, $w);
+                $pi += pow($r > 0 ? $r : 0.0001, $w);
             }
             $siValues[$varietas] = $si;
             $piValues[$varietas] = $pi;

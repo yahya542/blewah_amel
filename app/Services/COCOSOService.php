@@ -40,7 +40,7 @@ class COCOSOService
 
         foreach ($alternatives as $i => $alt) {
             $siSum = 0;
-            $piProduct = 1.0;
+            $piSum = 0;
 
             foreach ($criteria as $j => $crit) {
                 $val = $normalizedMatrix[$i][$j];
@@ -56,11 +56,11 @@ class COCOSOService
                 // Si = Σ (w_j * r_ij)
                 $siSum = $this->round_custom($siSum + $this->round_custom($val * $weight));
 
-                // Pi = Π (r_ij ^ w_j)
-                $piProduct = $this->round_custom($piProduct * pow(($val == 0 ? 0.0001 : $val), $weight));
+                // Pi = Σ (r_ij ^ w_j)
+                $piSum = $this->round_custom($piSum + pow(($val == 0 ? 0.0001 : $val), $weight));
             }
             $si[$i] = $siSum;
-            $pi[$i] = $piProduct;
+            $pi[$i] = $piSum;
         }
 
         $minSi = min($si);
@@ -173,11 +173,11 @@ class COCOSOService
                 $min = $colMin[$j];
 
                 if ($criteria[$j]->type === 'benefit') {
-                    // rij = x_ij / max(x_j)
-                    $normalized[$i][$j] = ($max != 0) ? $this->round_custom($val / $max) : 0;
+                    // rij = (x - min) / (max - min)
+                    $normalized[$i][$j] = ($max != $min) ? $this->round_custom(($val - $min) / ($max - $min)) : 1.0;
                 } else {
-                    // rij = min(x_j) / x_ij
-                    $normalized[$i][$j] = ($val != 0) ? $this->round_custom($min / $val) : 0;
+                    // rij = (max - x) / (max - min)
+                    $normalized[$i][$j] = ($max != $min) ? $this->round_custom(($max - $val) / ($max - $min)) : 1.0;
                 }
             }
         }
