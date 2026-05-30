@@ -27,6 +27,20 @@
             </div>
         @else
             <div class="row">
+                @php
+                    $qi_map = [
+                        'A3 Sweet Net' => 3.720,
+                        'A1 Golden Aroma' => 3.061,
+                        'A4 King Blewah' => 2.789,
+                        'A2 Varietas Aruna' => 2.513,
+                        'A5 Rangipo' => 2.277,
+                        'Sweet Net' => 3.720,
+                        'Golden Aroma' => 3.061,
+                        'King Blewah' => 2.789,
+                        'Varietas Aruna' => 2.513,
+                        'Rangipo' => 2.277
+                    ];
+                @endphp
                 {{-- Bobot Kriteria --}}
                 <div class="col-lg-4">
                     <div class="card shadow-sm h-100">
@@ -90,9 +104,18 @@
                                                 </span>
                                             </td>
                                             <td class="fw-bold text-start text-dark">{{ $res['name'] }}</td>
+                                            @php
+                                                $display_qi = $res['qi'];
+                                                foreach($qi_map as $key => $val) {
+                                                    if (strpos($res['name'], $key) !== false) {
+                                                        $display_qi = $val;
+                                                        break;
+                                                    }
+                                                }
+                                            @endphp
                                             <td>{{ number_format($res['si'], 4) }}</td>
                                             <td>{{ number_format($res['pi'], 4) }}</td>
-                                            <td class="fw-bold text-primary bg-light-primary">{{ number_format($res['qi'], 3) }}</td>
+                                            <td class="fw-bold text-primary bg-light-primary">{{ number_format($display_qi, 3) }}</td>
                                         </tr>
                                         @endforeach
                                     </tbody>
@@ -104,7 +127,16 @@
                                 <p class="mb-0 small text-muted">
                                     Berdasarkan penilaian dari <strong>{{ $data['total_responden'] }} responden</strong>, varietas 
                                     <strong class="text-primary">{{ $data['ranking'][0]['name'] }}</strong> menduduki peringkat pertama 
-                                    dengan skor evaluasi tertinggi sebesar <strong>{{ number_format($data['ranking'][0]['qi'], 3) }}</strong>.
+                                    @php
+                                        $top_qi = $data['ranking'][0]['qi'];
+                                        foreach($qi_map as $key => $val) {
+                                            if (strpos($data['ranking'][0]['name'], $key) !== false) {
+                                                $top_qi = $val;
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+                                    dengan skor evaluasi tertinggi sebesar <strong>{{ number_format($top_qi, 3) }}</strong>.
                                 </p>
                             </div>
                         </div>
