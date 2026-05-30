@@ -38,7 +38,7 @@
             <span class="hide-menu">Data Alternatif</span>
           </a>
         </li>
-        <li class="nav-small-cap">
+       <!--  <li class="nav-small-cap">
           <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
           <span class="hide-menu">PROSES</span>
         </li>
@@ -53,7 +53,7 @@
             <span><i class="ti ti-trophy"></i></span>
             <span class="hide-menu">Hasil Ranking</span>
           </a>
-        </li>
+        </li> -->
         <!-- <li class="sidebar-item">
           <a class="sidebar-link {{ Request::is('cocoso*') ? 'active' : '' }}" href="{{ route('admin.cocoso.index') }}" aria-expanded="false">
             <span><i class="ti ti-math-function"></i></span>
